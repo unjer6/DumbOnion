@@ -1,0 +1,102 @@
+stack_trace = {}
+current_objs = {}
+is_open = false
+
+function onLoad()
+
+    self.createButton({
+        click_function = "open_close",
+        function_owner = self,
+        label          = "Close",
+        position       = {0.7, 0.2, 0.5},
+        rotation       = {0, 0, 0},
+        width          = 220,
+        height         = 110,
+        font_size      = 50,
+        color          = {1, 1, 1},
+        font_color     = {0, 0, 0},
+    })
+
+    self.createButton({
+        click_function = "back",
+        function_owner = self,
+        label          = "Back",
+        position       = {0.3, 0.2, 0.5},
+        rotation       = {0, 0, 0},
+        width          = 220,
+        height         = 110,
+        font_size      = 50,
+        color          = {1, 1, 1},
+        font_color     = {0, 0, 0},
+    })
+
+end
+
+function open_close()
+    --[[ close ]]
+    if(is_open) then
+        destroy_current()
+        stack_trace = {}
+        is_open = false
+        return
+    end
+
+    --[[ open ]]
+    is_open = true
+    spawn_trace()
+end
+
+function back()
+    destroy_current()
+    if (#stack_trace == 0) then
+        is_open = false
+    else
+        table.remove(stack_trace)
+        spawn_trace()
+    end
+end
+
+function destroy_current()
+    for _, guid in pairs(current_objs) do
+        obj = getObjectFromGUID(guid)
+        if (obj) then obj.destruct() end
+    end
+    current_objs = {}
+end
+
+function spawn_trace()
+    if(not is_open) then return end
+
+    --[[ locate trace level ]]
+    data = self.getData()
+    for i = 1, #stack_trace do
+        found = false
+        for _, contained in pairs(data["ContainedObjects"]) do
+            if(contained["GUID"] == stack_trace[i]) then
+                data = contained
+                found = true
+                break
+            end
+        end
+        if (not found) then return end
+    end
+
+    --[[ spawn objects ]]
+    contained = data["ContainedObjects"]
+    if (contained) then
+        for i = 1, #contained do
+            obj = spawnObjectData({
+                data = contained[i],
+                position = Vector(-30 + 4*i, 1, 32),
+                rotation = Vector(0, 180, 0)
+            })
+            table.insert(current_objs, obj.guid)
+        end
+    end
+end
+
+function debug_log()
+    log(stack_trace)
+    log(current_objs)
+    log(is_open)
+end

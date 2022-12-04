@@ -1,0 +1,25 @@
+--[[ Lua code. See documentation: https://api.tabletopsimulator.com/ --]]
+
+unintGUIDS = {
+    "5466d9",
+    "15ce03",
+    "90894f",
+    "1a11be",
+    "248bab",
+    "2c1e53",
+    "d0f750",
+    "74ca0c"
+}
+
+
+--[[ The onLoad event is called after the game save finishes loading. --]]
+function onLoad()
+    for _, value in pairs(unintGUIDS) do
+        getObjectFromGUID(value).interactable = true
+    end
+end
+
+--[[ The onUpdate event is called once per frame. --]]
+function onUpdate()
+    --[[ print('onUpdate loop!') --]]
+end
