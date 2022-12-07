@@ -11,15 +11,99 @@ unintGUIDS = {
     "74ca0c"
 }
 
+gameStarted = false
+
+playAreaGUID = "5a3902"
+playArea = nil
+
+players = {
+    ["Yellow"] = {
+        discardGUID = "30183d"
+    },
+    ["Blue"] = {
+        discardGUID = "6d756b"
+    },
+    ["Red"] = {
+        discardGUID = "e48494"
+    },
+    ["White"] = {
+        discardGUID = "5dad5d"
+    },
+    ["Green"] = {
+        discardGUID = "4bda02"
+    },
+    ["Pink"] = {
+        discardGUID = "6bce99"
+    }
+}
 
 --[[ The onLoad event is called after the game save finishes loading. --]]
-function onLoad()
+function onLoad(saveStr)
     for _, value in pairs(unintGUIDS) do
         getObjectFromGUID(value).interactable = true
     end
+
+    local state = JSON.decode(saveStr)
+    if (state) then
+        gameStarted = state.gameStarted
+    end
+
+    playArea = getObjectFromGUID(playAreaGUID)
+    players["Yellow"].discard = getObjectFromGUID(players["Yellow"].discardGUID)
+    players["Blue"].discard = getObjectFromGUID(players["Blue"].discardGUID)
+    players["Red"].discard = getObjectFromGUID(players["Red"].discardGUID)
+    players["White"].discard = getObjectFromGUID(players["White"].discardGUID)
+    players["Green"].discard = getObjectFromGUID(players["Green"].discardGUID)
+    players["Pink"].discard = getObjectFromGUID(players["Pink"].discardGUID)
+
+    if (not gameStarted) then
+        playArea.createButton({
+            click_function = "startGame",
+            function_owner = Global,
+            label          = "Debug Start Game",
+            position       = {0, 0, 0},
+            rotation       = {0, 180, 0},
+            scale          = {2/109, 1, 2/14},
+            width          = 1800,
+            height         = 400,
+            font_size      = 200,
+            color          = {1, 1, 1},
+            font_color     = {0, 0, 0},
+        })
+    end
 end
 
---[[ The onUpdate event is called once per frame. --]]
-function onUpdate()
-    --[[ print('onUpdate loop!') --]]
+function onSave()
+    return JSON.encode({
+        gameStarted = gameStarted
+    })
+end
+
+function startGame()
+    playArea.clearButtons()
+    gameStarted = true
+
+    Turns.order = {
+        "Yellow",
+        "Blue",
+        "Red",
+        "White",
+        "Green",
+        "Pink"
+    }
+    Turns.enable = true
+end
+
+function onPlayerTurn(player, previous_player)
+    if (gameStarted and previous_player and previous_player.seated) then
+        local objs = playArea.getObjects()
+        for _, obj in pairs(objs) do
+            if (obj.type == "Deck" or obj.type == "Card") then
+                local targetPos = players[previous_player.color].discard.getPosition()
+                targetPos.y = 3
+                obj.setRotation(Vector(0, 180, 0))
+                obj.setPositionSmooth(targetPos, false, true)
+            end
+        end
+    end
 end

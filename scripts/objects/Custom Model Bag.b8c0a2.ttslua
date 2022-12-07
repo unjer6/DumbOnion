@@ -2,57 +2,97 @@ stack_trace = {}
 current_objs = {}
 is_open = false
 
-function onLoad()
+OPEN_BTN_PARAMS = {
+    click_function = "open",
+    function_owner = self,
+    label          = "Open",
+    position       = {0.7, 0.2, 0.5},
+    rotation       = {0, 0, 0},
+    width          = 220,
+    height         = 110,
+    font_size      = 50,
+    color          = {1, 1, 1},
+    font_color     = {0, 0, 0},
+}
 
-    self.createButton({
-        click_function = "open_close",
-        function_owner = self,
-        label          = "Close",
-        position       = {0.7, 0.2, 0.5},
-        rotation       = {0, 0, 0},
-        width          = 220,
-        height         = 110,
-        font_size      = 50,
-        color          = {1, 1, 1},
-        font_color     = {0, 0, 0},
-    })
+CLOSE_BTN_PARAMS = {
+    click_function = "close",
+    function_owner = self,
+    label          = "Close",
+    position       = {0.7, 0.2, 0.5},
+    rotation       = {0, 0, 0},
+    width          = 220,
+    height         = 110,
+    font_size      = 50,
+    color          = {1, 1, 1},
+    font_color     = {0, 0, 0},
+}
 
-    self.createButton({
-        click_function = "back",
-        function_owner = self,
-        label          = "Back",
-        position       = {0.3, 0.2, 0.5},
-        rotation       = {0, 0, 0},
-        width          = 220,
-        height         = 110,
-        font_size      = 50,
-        color          = {1, 1, 1},
-        font_color     = {0, 0, 0},
-    })
+BACK_BTN_PARAMS = {
+    click_function = "back",
+    function_owner = self,
+    label          = "Back",
+    position       = {0.3, 0.2, 0.5},
+    rotation       = {0, 0, 0},
+    width          = 220,
+    height         = 110,
+    font_size      = 50,
+    color          = {1, 1, 1},
+    font_color     = {0, 0, 0},
+}
 
+function onLoad(saveStr)
+    local save = JSON.decode(saveStr)
+
+    if (not save or not save.is_open) then
+        self.createButton(OPEN_BTN_PARAMS)
+    else
+        self.createButton(CLOSE_BTN_PARAMS)
+        self.createButton(BACK_BTN_PARAMS)
+    end
 end
 
-function open_close()
-    --[[ close ]]
-    if(is_open) then
-        destroy_current()
-        stack_trace = {}
-        is_open = false
-        return
-    end
+function onSave()
+    local save = {
+        stack_trace = stack_trace,
+        current_objs = current_objs,
+        is_open = is_open
+    }
 
-    --[[ open ]]
+    return JSON.encode(save)
+end
+
+function open()
     is_open = true
+    destroy_current()
     spawn_trace()
+
+    self.clearButtons()
+    self.createButton(CLOSE_BTN_PARAMS)
+    self.createButton(BACK_BTN_PARAMS)
+end
+
+function close()
+    stack_trace = {}
+    is_open = false
+    destroy_current()
+
+    self.clearButtons()
+    self.createButton(OPEN_BTN_PARAMS)
 end
 
 function back()
     destroy_current()
     if (#stack_trace == 0) then
         is_open = false
+        self.clearButtons()
+        self.createButton(OPEN_BTN_PARAMS)
     else
         table.remove(stack_trace)
         spawn_trace()
+        self.clearButtons()
+        self.createButton(CLOSE_BTN_PARAMS)
+        self.createButton(BACK_BTN_PARAMS)
     end
 end
 
