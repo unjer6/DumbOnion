@@ -1,154 +1,87 @@
--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// CONSTANTS
 
-CARD_BACK_IMAGE = "http://cloud-3.steamusercontent.com/ugc/482272972286453570/660AD27C5F3A9BA42322C99BE5E4BD3F0AF8F91B/"
+#include !/DumbOnion/scripts/PlayAreaColor.ttslua
 
--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// CLASSES
+--///////////////////////////////////////////////////////////////////////////////////////////////// DEFINITIONS
 
-#include !/DumbOnion/scripts/Board.ttslua
+turnOrder = {
+    "Yellow",
+    "Blue",
+    "Red",
+    "White",
+    "Green",
+    "Pink"
+}
 
--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// DEFINITIONS
+--///////////////////////////////////////////////////////////////////////////////////////////////// DECLARATIONS
 
-#include !/DumbOnion/scripts/Definitions.ttslua
+playArea = nil
+playerAreas = {
+    ["Yellow"] = nil,
+    ["Blue"] = nil,
+    ["Red"] = nil,
+    ["White"] = nil,
+    ["Green"] = nil,
+    ["Pink"] = nil
+}
+playerDecks = {
+    ["Yellow"] = nil,
+    ["Blue"] = nil,
+    ["Red"] = nil,
+    ["White"] = nil,
+    ["Green"] = nil,
+    ["Pink"] = nil
+}
+playerDiscards = {
+    ["Yellow"] = nil,
+    ["Blue"] = nil,
+    ["Red"] = nil,
+    ["White"] = nil,
+    ["Green"] = nil,
+    ["Pink"] = nil
+}
 
--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// GAME MANAGEMENT
+--///////////////////////////////////////////////////////////////////////////////////////////////// EVENTS
 
--- performs setup that can only be done after everything loads
-function onLoad(save_state)
-    -- get save data
-    save = (save_state ~= nil and save_state ~= "" and JSON.decode(save_state)) or defaultSave
+function onLoad(saveString)
+    SetDeclarations()
 
-    for key, value in pairs(defaultSave) do
-        if save[key] == nil then
-            save[key] = value
-        end
-    end
-
-    Turns.enable = save.turnsEnabled
-
-    if save.board then
-        setmetatable(save.board, {__index = Board})
-    end
-
-    -- set a random seed
-    math.randomseed(os.time())
-
-    -- get all objects by guid
-    objects = applyFunc(guids, function(k ,v) return getObjectFromGUID(v) end)
-
-    -- load buttons that are in the scene (or make default buttons)
-    --[[loadButtons()]]
+    -- spawn UI
 end
 
--- saves everything in save
 function onSave()
-    save.turnsEnabled = Turns.enable
-
-    return JSON.encode(save)
+    return ""
 end
 
--- resets the save data back to default (used through /execute)
-function resetSave()
-    save = defaultSave
-    print("Save reset!")
-    self.script_state = JSON.encode(save)
-    onLoad(self.script_state)
-end
-
--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// BUTTONS
-
--- loads default buttons based on what gamestate it is
-function loadButtons()
-    generateButtonFunctions()
-    updateButtons()
-end
-
--- uses setVar to create button functions
-function generateButtonFunctions()
-    -- make functions for each player's shuffle
-    for _, p in ipairs(players) do
-        local name = buttonParamsPrototypes.shuffle(p).click_function
-        local func = buttonFunctionPrototypes.shuffle(p)
-        Global.setVar(name, func)
+function onPlayerTurn(current_player, previous_player)
+    -- auto cleanup previous player
+    if (playArea and previous_player and previous_player.seated and playerDiscards[previous_player.color]) then
+        --[[local hitlist = Physics.cast({
+            origin = playArea.getPosition(),
+            direction = Vector(0, 1, 0),
+            type = 3,
+            size = playArea.getBoundsNormalized().size,
+            orientation = playArea.getRotation(),
+            max_distance = 1,
+            debug = true
+        })]]
     end
 
-    -- make a function for gaining a card
-    local name = buttonParamsPrototypes.gain().click_function
-    local func = buttonFunctionPrototypes.gain()
-    Global.setVar(name, func)
-
-    -- make a function for dealing randomizer cards
-    local name = buttonParamsPrototypes.dealRandomizer().click_function
-    local func = buttonFunctionPrototypes.validateAdmin(dealRandomizer)
-    Global.setVar(name, func)
-
-    -- make a function for setup
-    local name = buttonParamsPrototypes.setup().click_function
-    local func = buttonFunctionPrototypes.validateAdmin(setupKingdom)
-    Global.setVar(name, func)
-
-    -- make a function for end game
-    local name = buttonParamsPrototypes.endGame().click_function
-    local func = buttonFunctionPrototypes.validateAdmin(endGame)
-    Global.setVar(name, func)
+    -- set color of play area
+    SetPlayAreaColor(playArea, playerAreas, current_player)
 end
 
--- clears all tts buttons and makes new ones using what is currently saved in the buttons table
-function updateButtons()
-    if save.buttons == nil then return end
+function onChat(message, player)
+    -- handle chat commands
+end
 
-    for key, value in pairs(save.buttons) do
-        -- get the object buttons is refering to
-        local object = getObjectFromGUID(key)
-        -- if that object still exists
-        if object then
-            -- clear all its buttons and make new ones matching the ones in buttons
-            object.clearButtons()
-            local index = 0
-            for name, buttonInfo in pairs(value) do
-                object.createButton(buttonInfo.params)
-                buttonInfo.index = index
-                index = index + 1
-            end
-        else
-            -- no object was found so delete the buttons from buttons
-            save.buttons[key] = nil
-        end
+--///////////////////////////////////////////////////////////////////////////////////////////////// METHODS
+
+function SetDeclarations()
+    -- find objects by tag
+    playArea = getObjectsWithTag("Play Area")[1]
+    for _, c in pairs(turnOrder) do
+        playerAreas[c] = getObjectsWithAllTags({"Player Area", c})[1]
+        playerDecks[c] = getObjectsWithAllTags({"Deck", c})[1]
+        playerDiscards[c] = getObjectsWithAllTags({"Discard", c})[1]
     end
 end
-
--- edits one list of button params with new params
-function changeParams(old, new)
-    local table = {}
-    if new.click_function or old.click_function then table.click_function = new.click_function or old.click_function end
-    if new.function_owner or old.function_owner then table.function_owner = new.function_owner or old.function_owner end
-    if new.label          or old.label          then table.label          = new.label          or old.label          end
-    if new.position       or old.position       then table.position       = new.position       or old.position       end
-    if new.rotation       or old.rotation       then table.rotation       = new.rotation       or old.rotation       end
-    if new.scale          or old.scale          then table.scale          = new.scale          or old.scale          end
-    if new.width          or old.width          then table.width          = new.width          or old.width          end
-    if new.height         or old.height         then table.height         = new.height         or old.height         end
-    if new.font_size      or old.font_size      then table.font_size      = new.font_size      or old.font_size      end
-    if new.color          or old.color          then table.color          = new.color          or old.color          end
-    if new.font_color     or old.font_color     then table.font_color     = new.font_color     or old.font_color     end
-    if new.hover_color    or old.hover_color    then table.hover_color    = new.hover_color    or old.hover_color    end
-    if new.press_color    or old.press_color    then table.press_color    = new.press_color    or old.press_color    end
-    if new.tooltip        or old.tooltip        then table.tooltip        = new.tooltip        or old.tooltip        end
-
-    return table
-end
-
--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// AUTO SETUP
-
-#include !/DumbOnion/scripts/AutoSetup.ttslua
-
--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// AUTO CLEANUP
-
-#include !/DumbOnion/scripts/AutoCleanup.ttslua
-
--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// AUTO SCORING
-
-#include !/DumbOnion/scripts/AutoScoring.ttslua
-
--- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// HELPER FUNCTIONS
-
-#include !/DumbOnion/scripts/Helpers.ttslua

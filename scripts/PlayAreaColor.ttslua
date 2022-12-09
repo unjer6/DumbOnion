@@ -1,0 +1,9 @@
+
+defaultPlayAreaColor = Color(100/255, 100/255, 100/255)
+
+function SetPlayAreaColor(playArea, playerAreas, current_player)
+    if (playArea) then
+        if (current_player and playerAreas[current_player.color]) then playArea.setColorTint(playerAreas[current_player.color].getColorTint())
+        else                                                           playArea.setColorTint(defaultPlayAreaColor) end
+    end
+end
