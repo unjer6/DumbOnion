@@ -1,0 +1,694 @@
+-- deals out randomizer cards into the kingdom supply
+function dealRandomizer()
+    local randomizerDeck = findDeck(objects["Randomizer Deck Zone"])
+    if randomizerDeck then
+        randomizerDeck.setRotation(vector(0, 180, 180))
+        randomizerDeck.randomize()
+    else
+        -- there is no deck so there's no point in going further
+        return
+    end
+
+
+    -- tables of zones which have not been filled yet
+    local emptyKingdomSpots = {}
+    local emptyEventSlots = {}
+
+    local eventTypes = {"Event", "Landmark", "Project", "Way"}
+
+    -- find what zones already have cards in them
+    for _, zone in ipairs(objects.supply.kingdomZones) do
+        if findDeck(zone) == nil then
+            table.insert(emptyKingdomSpots, zone)
+        end
+    end
+    for _, zone in ipairs(objects.supply.eventZones) do
+        if findDeck(zone) == nil then
+            table.insert(emptyEventSlots, zone)
+        end
+    end
+
+    function dealRandomizerCoroutine()
+        for i = 0, 15 do
+            coroutine.yield(0)
+        end
+
+        local unusedCards = {}   -- table of cards that were drawn but didn't get dealt out
+        local targetDiscardPosition = objects["Randomizer Discard Zone"].getPosition()
+        while #emptyKingdomSpots > 0 do
+            -- get the deck and then check if there is one otherwise break out
+            randomizerDeck = findDeck(objects["Randomizer Deck Zone"])
+            if not randomizerDeck then break end
+            -- get the card out of the deck
+            local card = safeTakeObject(randomizerDeck, {index = 0, position = objects["Randomizer Deck Zone"].getPosition()})
+            -- check if its an event type card
+            if cards[card.getName()] and hasValueTable(cards[card.getName()].type, eventTypes) then
+                if #emptyEventSlots > 0 then
+                    card.setRotation(vector(0, 90, 0))
+                    card.setPositionSmooth(emptyEventSlots[1].getPosition(), false, false)
+                    table.remove(emptyEventSlots, 1)
+                else
+                    card.setRotation(vector(0, 180, 0))
+                    card.setPositionSmooth(targetDiscardPosition, false, false)
+                    table.insert(unusedCards, card)
+                end
+            else
+                card.setRotation(vector(0, 180, 0))
+                card.setPositionSmooth(emptyKingdomSpots[1].getPosition(), false, false)
+                table.remove(emptyKingdomSpots, 1)
+            end
+
+            -- wait a little while until the next loop
+            for i = 0, 5 do
+                coroutine.yield(0)
+            end
+        end
+
+        return 1
+    end
+
+    startLuaCoroutine(self, "dealRandomizerCoroutine")
+end
+
+-- sets up the board and starts the game
+-- takes given board settings or gets them from what cards are on the table
+function setupKingdom(boardSettings)
+    -- Setup is done in the following order:
+    -- Reads randomizer settings from the board if none were given and validates settings
+    -- Creates a board object and puts it in save
+        -- all cards have getDependencies called
+        -- getDependencies should be where things like the black market deck are formed
+        -- if a card needs to stop setup it should set board.isDirty to true
+    -- Spawns in kingdom piles
+        -- deletes extra sideways slots and moves and sorts cards
+        -- deletes extra materials not needed in dependencies
+    -- Performs setup of cards (cards are allowed to spawn things in during this step and setup can no longer be halted)
+    -- Performs postsetup (cards can alter the effects of other cards if needed) [NOT CURRENTLY IMPLEMENTED]
+
+    -- ////////////////////////////////////////////////////////////// Validate Settings
+
+    -- whether or not the settings are already provided
+    local hasSettings = (boardSettings and true) or false
+    if hasSettings then
+        if not isBoardSlotsEmpty() then
+            printToAll("ERROR: Can't setup with settings when their are cards in the randomizer slots.", Color.Red)
+            return
+        end
+        for _, name in ipairs(boardSettings.kingdom) do
+            if not (cards[name] and cards[name].sheet) then
+                printToAll("ERROR: Can't setup with settings that have unknown cards.", Color.Red)
+                return
+            end
+        end
+        for _, name in ipairs(boardSettings.sideways) do
+            if not (cards[name] and cards[name].sheet) then
+                printToAll("ERROR: Can't setup with settings that have unknown cards.", Color.Red)
+                return
+            end
+        end
+    end
+
+    local boardSettings = boardSettings or BoardSettings:New()
+    if not hasSettings then boardSettings:ReadSettings() end
+
+    if not boardSettings:ValidateSettings(save.debug) then
+        printToAll("ERROR: Not a valid board setup.", Color.Red)
+        return
+    end
+
+    local board = Board:New()
+    board:SetBoard(boardSettings)
+
+    -- the rest needs to be a seperate function so we can wait for the board to be set up
+    local finishSetup = function()
+        if board.isDirty then return end
+        save.board = board
+
+        -- ///////////////////////////////////////////////////////// Spawn in piles
+
+        -- sort the board
+        local kingdomNamesToObjects = {}
+        local sidewaysNamesToObjects = {}
+        if not hasSettings then
+            local lastIndex = 0
+            for _, t in ipairs(board.kingdom) do
+                for i = lastIndex + 1, #kingdomPiles do
+                    local zone = getObjectFromGUID(kingdomPiles[i] and kingdomPiles[i].guids and kingdomPiles[i].guids["Zone"])
+                    if not zone then
+                        printToAll("No Zone found for kingdom pile \""..i.."\".", Color.Yellow)
+                    else
+                        local card = findDeck(zone)
+                        if card then
+                            kingdomNamesToObjects[t.randomizer] = card
+                            lastIndex = i
+                            break
+                        end
+                    end
+                end
+            end
+            for key, t in pairs(board.otherKingdom) do
+                local zone = getObjectFromGUID(kingdomPiles[key] and kingdomPiles[key].guids and kingdomPiles[key].guids["Zone"])
+                if not zone then
+                    printToAll("No Zone found for kingdom pile \""..key.."\".", Color.Yellow)
+                else
+                    local card = findDeck(zone)
+                    if card then
+                        kingdomNamesToObjects[t.randomizer] = card
+                    end
+                end
+            end
+            local lastIndex = 0
+            for _, name in ipairs(board.sideways) do
+                for i = lastIndex + 1, #objects.supply.eventZones do
+                    local card = findDeck(objects.supply.eventZones[i])
+                    if card then
+                        sidewaysNamesToObjects[name] = card
+                        lastIndex = i
+                        break
+                    end
+                end
+            end
+        end
+
+        board:Sort()
+
+        -- spawn in kingdom piles
+        for key, name in pairs(board:GetKingdomRandomizers()) do
+            local zone = getObjectFromGUID(kingdomPiles[key] and kingdomPiles[key].guids and kingdomPiles[key].guids["Zone"])
+            if not zone then
+                printToAll("No Kingdom zone found for zone \""..key.."\".", Color.Yellow)
+            else
+                local card = kingdomNamesToObjects[name]
+                local position = zone.getPosition()
+                position.y = 1
+                local rotation = vector(0, 180, 0)
+
+                local isReplace = false
+                local replaceZone = nil
+                -- check if its a replacement and then clone the replacement deck
+                if cards[name] and cards[name].replacement then
+                    if not replacementPiles[cards[name].replacement] then
+                        printToAll("No Replacement pile found for card \""..name.."\".", Color.Yellow)
+                    else
+                        isReplace = true
+                    end
+                end
+                if isReplace then
+                    replaceZone = getObjectFromGUID(replacementPiles[cards[name].replacement].guids["Zone"])
+                    if not replaceZone then
+                        printToAll("No Replacement pile zone found for card \""..name.."\".", Color.Yellow)
+                    end
+                end
+
+                if isReplace and replaceZone then
+                    local pile = findDeck(replaceZone)
+                    if pile then
+                        local clone = pile.clone()
+                        clone.setPosition(position)
+                        clone.setRotation(rotation)
+                        if clone.type == "Deck" then clone.setName(name .. " Pile") end
+                    end
+                -- check if the card object that we are cloning exists (if not then spawn based on name)
+                elseif card then
+                    local data = card.getData()
+                    local deckData = {}
+                    local supplyCount = callCardFunc(name, "getSupplyCount", board) or getCardProperty(name, "supplyCount") or 10
+                    for i = 1, supplyCount do
+                        deckData[i] = data
+                    end
+                    local clone = spawnObjectData(getDeckDataTable(deckData))
+                    clone.setPosition(position)
+                    clone.setRotation(rotation)
+                    if clone.type == "Deck" then clone.setName(name .. " Pile") end
+                else
+                    local data = getCardDataName(name)
+                    if data ~= nil then
+                        local deckData = {}
+                        local supplyCount = callCardFunc(name, "getSupplyCount", board) or getCardProperty(name, "supplyCount") or 10
+                        for i = 1, supplyCount do
+                            deckData[i] = data
+                        end
+                        local clone = spawnObjectData(getDeckDataTable(deckData))
+                        clone.setPosition(position)
+                        clone.setRotation(rotation)
+                        if clone.type == "Deck" then clone.setName(name .. " Pile") end
+                    else
+                        printToAll("Failed to spawn pile from name for card \""..name.."\".", Color.Yellow)
+                    end
+                end
+            end
+            if kingdomNamesToObjects[name] then kingdomNamesToObjects[name].destruct() end
+        end
+
+        -- delete extra sideways mat and zones and move the remaining ones into position
+        local sidewaysPadding = 5.2     -- the distance on x between adjacent sideways supplies
+        -- delete extra first
+        for i, v in ipairs(objects.supply.eventZones) do
+            if i > #board.sideways then
+                v.destruct()
+                objects.supply.eventZones[i] = nil
+                objects.supply.eventMats[i].destruct()
+                objects.supply.eventMats[i] = nil
+            end
+        end
+        -- move remaining mats and zones so they are centered
+        for i, v in ipairs(objects.supply.eventZones) do
+            local leftMostX = -1 * ((#board.sideways - 1) / 2) * sidewaysPadding
+            local position = v.getPosition()
+            position.x = leftMostX + sidewaysPadding * (i - 1)
+            v.setPosition(position)
+            position = objects.supply.eventMats[i].getPosition()
+            position.x = leftMostX + sidewaysPadding * (i - 1)
+            objects.supply.eventMats[i].setPosition(position)
+        end
+
+        -- spawn in sideways cards
+        for key, name in pairs(board:GetSideways()) do
+            local zone = objects.supply.eventZones[key]
+            if not zone then
+                printToAll("No Sideways zone found for name \""..key.."\".", Color.Yellow)
+            else
+                local card = sidewaysNamesToObjects[name]
+                if card then
+                    card.setLock(false)    -- just in case
+                    card.setRotation(vector(0, 90, 0))
+                    local pos = zone.getPosition()
+                    pos.y = 1
+                    card.setPosition(pos)
+                    -- make a function to lock them in place after they are rested
+                    Wait.condition(
+                        function() -- Executed after our condition is met
+                            if not card.isDestroyed() then
+                                card.setLock(true)
+                            end
+                        end,
+                        function() -- Condition function
+                            return card.isDestroyed() or card.resting
+                        end
+                    )
+                else
+                    local data = getCardDataName(name)
+                    local card = spawnObjectData(data)
+                    if not card then
+                        printToAll("No Sideways card data found for card \""..name.."\".", Color.Yellow)
+                    else
+                        card.setLock(false)    -- just in case
+                        card.setRotation(vector(0, 90, 0))
+                        local pos = zone.getPosition()
+                        pos.y = 1
+                        card.setPosition(pos)
+                        -- make a function to lock them in place after they are rested
+                        Wait.condition(
+                            function() -- Executed after our condition is met
+                                if not card.isDestroyed() then
+                                    card.setLock(true)
+                                end
+                            end,
+                            function() -- Condition function
+                                return card.isDestroyed() or card.resting
+                            end
+                        )
+                    end
+                end
+            end
+        end
+
+        -- ///////////////////////////////////////////////////////// Delete extras and move things around
+
+        local dependencies = board:GetDependenciesSet()
+        local deleteObjects = function(name, t)
+            if not dependencies[name] and not t.dontDestroy and t.guids then
+                if not t.dontDestroyDeck then
+                    local zone = getObjectFromGUID(t.guids["Zone"])
+                    if zone then
+                        local deck = findDeck(zone)
+                        if deck then
+                            deck.destruct()
+                        end
+                    end
+                end
+                for _, guid in pairs(t.guids) do
+                    if type(guid) == "table" then
+                        if not t.dontDestroyDeck then
+                            local zone = getObjectFromGUID(guid["Zone"])
+                            if zone then
+                                local deck = findDeck(zone)
+                                if deck then
+                                    deck.destruct()
+                                end
+                            end
+                        end
+                        for _, guid2 in pairs(guid) do
+                            local obj = getObjectFromGUID(guid2)
+                            if obj then
+                                obj.destruct()
+                            end
+                        end
+                    else
+                        local obj = getObjectFromGUID(guid)
+                        if obj then
+                            obj.destruct()
+                        end
+                    end
+                end
+            end
+        end
+        -- delete basic piles
+        for name, t in pairs(basicPiles) do
+            deleteObjects(name, t)
+        end
+        -- delete other kingdom piles
+        for name, t in pairs(kingdomPiles) do
+            deleteObjects(name, t)
+        end
+        -- delete other sideways piles
+        for name, t in pairs(sidewaysPiles) do
+            deleteObjects(name, t)
+        end
+        -- delete nonSupply
+        for name, t in pairs(nonSupplyPiles) do
+            deleteObjects(name, t)
+        end
+        -- delete mats and tokens
+        for name, t in pairs(matsAndTokens) do
+            deleteObjects(name, t)
+        end
+        -- delete extras
+        for name, t in pairs(extras) do
+            deleteObjects(name, t)
+        end
+        -- delete replacement piles
+        for name, t in pairs(replacementPiles) do
+            deleteObjects(name, t)
+        end
+
+        -- ///////////////////////////////////////////////////////// Perform extra setup steps
+
+        -- setup the basic rules of the game (shelters, etc)
+        for _, t in pairs(BOARD_RULES) do
+            if t.setup then
+                t.setup(board)
+            end
+        end
+        -- setup basic piles
+        for name, t in pairs(board.basics) do
+            if basicPiles[name] then
+                if basicPiles[name].setup then
+                    basicPiles[name].setup(board)
+                end
+            else
+                printToAll("No Basic pile found for name \""..name.."\".", Color.Yellow)
+            end
+        end
+        -- setup kingdom piles
+        for k, t in pairs(board:GetKingdomContentsTable()) do
+            local zone = objects.supply.kingdomZones[k]
+            for _, name in ipairs(t) do
+                callCardEvent(name, "setup", board, zone)
+            end
+        end
+        -- also call the replacement pile if its a replacement card
+        for k, name in pairs(board:GetKingdomRandomizers()) do
+            local zone = objects.supply.kingdomZones[k]
+            if cards[name] and cards[name].replacement and replacementPiles[cards[name].replacement] and replacementPiles[cards[name].replacement].setup then
+                replacementPiles[cards[name].replacement].setup(board, zone)
+            end
+        end
+        -- setup sideways cards
+        for k, name in pairs(board:GetSideways()) do
+            local zone = objects.supply.eventZones[k]
+            callCardEvent(name, "setup", board, zone)
+        end
+        -- setup nonSupply
+        for k, t in pairs(board.nonSupply) do
+            local zone = objects.nonSupply.zones[k]
+            for _, name in ipairs(t) do
+                callCardEvent(name, "setup", board, zone)
+            end
+        end
+        -- setup mats and tokens
+        for name in pairs(board.matsAndTokens) do
+            if matsAndTokens[name] then
+                if matsAndTokens[name].setup then
+                    matsAndTokens[name].setup(board)
+                end
+            else
+                printToAll("No Mat or Token found for name \""..name.."\".", Color.Yellow)
+            end
+        end
+        -- setup extras
+        for name, t in pairs(board.extras) do
+            if extras[name] then
+                if extras[name].setup then
+                    extras[name].setup(board)
+                end
+            else
+                printToAll("No Extra found for name \""..name.."\".", Color.Yellow)
+            end
+        end
+        -- setup starting cards
+        for _, name in ipairs(board.startingCards) do
+            callCardEvent(name, "setup", board)
+        end
+
+        -- ///////////////////////////////////////////////////////// Perform a final setup step for cards that need to change other card's effects
+
+        -- NOT IMPLEMENTED (no cards need it)
+
+        -- ///////////////////////////////////////////////////////// Starting the game
+
+        -- shuffle decks and deal hands
+        function setupKingdomCoroutine()
+            for _, color in pairs(players) do
+                -- discard cards in hand in case anyone drew anything
+                discardHand(color)
+            end
+
+            -- wait for the cards to settle first
+            for i=1, 60 do
+                coroutine.yield(0)
+            end
+
+            for _, color in ipairs(players) do
+                -- shuffle and draw (if there is someone seated there)
+                local zone = getObjectFromGUID(matsAndTokens["Deck"].guids[color]["Zone"])
+                if zone then
+                    local deck = findDeck(zone)
+                    if deck then deck.randomize() end
+                    if Player[color].seated then drawAllCards(5, color) end
+                end
+            end
+
+            -- set the turn order
+            board.boardSettings:SetTurnOrder(players[math.random(#players)])
+            Turns.order = board.boardSettings.turnOrder
+            Turns.enable = true
+
+            return 1
+        end
+
+        startLuaCoroutine(self, "setupKingdomCoroutine")
+
+        -- create new buttons and remove old buttons
+        save.buttons[objects["Button Zone"].guid]["Complete Setup"] = nil
+        save.buttons[objects["Button Zone"].guid]["Deal Randomizer"] = nil
+        save.buttons[objects["Button Zone"].guid]["End Game"] = {
+            index = 0,
+            params = buttonParamsPrototypes.endGame()
+        }
+        -- create gain buttons
+        for key, value in pairs(objects.supply.kingdomZones) do
+            if value ~= nil then
+                local params = buttonParamsPrototypes.gain()
+                params.position = vector(params.position.x, -0.2, params.position.z)
+                save.buttons[value.guid] = {}
+                save.buttons[value.guid]["Gain"] = {
+                    index = 0,
+                    params = params
+                }
+            end
+        end
+        for key, value in pairs(objects.supply.basicPileZones) do
+            if value ~= nil then
+                local params = buttonParamsPrototypes.gain()
+                -- make the copper button higher if there are a lot of players
+                if key == "Copper" and board.boardSettings.playerCount > 4 then
+                    params.position = vector(params.position.x, 0.2, params.position.z)
+                end
+                save.buttons[value.guid] = {}
+                save.buttons[value.guid]["Gain"] = {
+                    index = 0,
+                    params = params
+                }
+            end
+        end
+        for key, value in pairs(objects.nonSupply.zones) do
+            if value ~= nil then
+                save.buttons[value.guid] = {}
+                save.buttons[value.guid]["Gain"] = {
+                    index = 0,
+                    params = buttonParamsPrototypes.gain()
+                }
+            end
+        end
+        if objects.supply.otherMats["Bane Mat"][2] then
+            save.buttons[objects.supply.otherMats["Bane Mat"][2].guid] = {
+                ["Gain"] = {
+                    index = 0,
+                    params = buttonParamsPrototypes.gain()
+                }
+            }
+        end
+        updateButtons()
+    end
+
+    -- finally start the finish setup function after board is done running
+    Wait.condition(finishSetup,
+        function()
+            return board.coroutinesRunning <= 0
+        end,
+        30,
+        function()
+            printToAll("ERROR: Timeout. Board took too long to set up.", Color.Red)
+        end
+    )
+end
+
+-- returns true or false if the board slots have no cards in them
+function isBoardSlotsEmpty()
+    for _, zone in ipairs(objects.supply.kingdomZones) do
+        local cardObjects = getAllCardsInZone(zone)
+        if #cardObjects > 0 then
+            return false
+        end
+    end
+    for _, zone in ipairs(objects.supply.eventZones) do
+        local cardObjects = getAllCardsInZone(zone)
+        if #cardObjects > 0 then
+            return false
+        end
+    end
+
+    return true
+end
+
+-- sorts two cards by name a and b and returns true if a comes before b
+-- a and b can also be tables of names that are in a pile
+function sort(a, b)
+    -- first sort by if they have a card definition
+    if cards[a] == nil and cards[b] == nil then return a < b end    -- both aren't defined so sort alphabetically
+    if cards[a] == nil then return true end       -- a is nil but b isn't so a comes before b
+    if cards[b] == nil then return false end      -- b is nil but a isn't so b comes before a
+
+    -- both exist so try sorting by if they have a cost
+    if cards[a].cost == nil and cards[b].cost == nil then return a < b end    -- both costs aren't defined so sort alphabetically
+    if cards[a].cost == nil then return true end       -- a's cost is nil but b isn't so a comes before b
+    if cards[b].cost == nil then return false end      -- b's cost is nil but a isn't so b comes before a
+
+    -- now they have costs so see if we can sort by money
+    if cards[a].cost["Money"] ~= cards[b].cost["Money"] then
+        if cards[a].cost["Money"] and cards[b].cost["Money"] then
+            -- both have money costs that are different so return which one is smaller
+            return cards[a].cost["Money"] < cards[b].cost["Money"]
+        end
+        if cards[a].cost["Money"] == nil then return true end -- a doesn't have a money cost and b does so it comes before b
+        if cards[b].cost["Money"] == nil then return false end -- b doesn't have a money cost and a does so it comes before a
+    end
+
+    -- can't sort by money so sort by debt
+    if cards[a].cost["Debt"] ~= cards[b].cost["Debt"] then
+        if cards[a].cost["Debt"] and cards[b].cost["Debt"] then
+            -- both have debt costs that are different so return which one is smaller
+            return cards[a].cost["Debt"] < cards[b].cost["Debt"]
+        end
+        if cards[a].cost["Debt"] == nil then return true end -- a doesn't have a debt cost and b does so it comes before b
+        if cards[b].cost["Debt"] == nil then return false end -- b doesn't have a debt cost and a does so it comes before a
+    end
+
+    -- can't sort by debt so sort by potion cost
+    if cards[a].cost["Potion"] ~= cards[b].cost["Potion"] then
+        if cards[a].cost["Potion"] and cards[b].cost["Potion"] then
+            -- both have potion costs that are different so return which one is smaller
+            return cards[a].cost["Potion"] < cards[b].cost["Potion"]
+        end
+        if cards[a].cost["Potion"] == nil then return true end -- a doesn't have a potion cost and b does so it comes before b
+        if cards[b].cost["Potion"] == nil then return false end -- b doesn't have a potion cost and a does so it comes before a
+    end
+
+    -- finally sorting by cost didn't work so just sort alphabetically
+    return a < b
+end
+
+-- takes an indexed table of cards objects and a position and forms a deck out of those card objects
+-- returns the deck formed
+function formDeckTable(cardTable, position)
+    local paramsTable = {}
+
+    for _, card in ipairs(cardTable) do
+        local params = {}
+        local data = card.getData()
+        params.name = card.getName()
+        params.transform = getTransform(position, vector(0, 180, 0), vector(1.5, 1, 1.5))
+        params.sideways = data.SidewaysCard
+        local deckID = math.floor(data.CardID / 100)
+        params.sheetPos = data.CardID - deckID * 100
+        params.sheet = {
+            image = data.CustomDeck[deckID].FaceURL,
+            width = data.CustomDeck[deckID].NumWidth,
+            height = data.CustomDeck[deckID].NumHeight
+        }
+        params.cardBack = data.CustomDeck[deckID].BackURL
+        table.insert(paramsTable, params)
+    end
+
+    for _, card in ipairs(cardTable) do
+        card.destruct()
+    end
+    local deck = spawnDeck(paramsTable, "Pile", getTransform(position, vector(0, 180, 0), vector(1.5, 1, 1.5)))
+
+    return deck
+end
+
+-- forms a deck with a given number of copies of a single card object
+function formDeckCard(card, count, position)
+    local paramsTable = {}
+
+    local params = {}
+    local data = card.getData()
+
+    params.name = card.getName()
+    params.transform = getTransform(position, vector(0, 180, 0), vector(1.5, 1, 1.5))
+    params.sideways = data.SidewaysCard
+    local deckID = math.floor(data.CardID / 100)
+    params.sheetPos = data.CardID - deckID * 100
+    params.sheet = {
+        image = data.CustomDeck[deckID].FaceURL,
+        width = data.CustomDeck[deckID].NumWidth,
+        height = data.CustomDeck[deckID].NumHeight
+    }
+    params.cardBack = data.CustomDeck[deckID].BackURL
+
+    for i = 1, count do
+        table.insert(paramsTable, params)
+    end
+
+    local deckName = (card.getName() ~= "" and card.getName() .. " Pile") or "Pile"
+    card.destruct()
+    local deck = spawnDeck(paramsTable, deckName, getTransform(position, vector(0, 180, 0), vector(1.5, 1, 1.5)))
+
+    return deck
+end
+
+-- forms a deck with a given number of copies of a single card by name
+function formDeckName(name, count, position)
+    local paramsTable = {}
+
+    for i = 1, count do
+        table.insert(paramsTable, {name = name})
+    end
+
+    local deckName = (name ~= "" and name .. " Pile") or "Pile"
+    local deck = spawnDeck(paramsTable, deckName, getTransform(position, vector(0, 180, 0), vector(1.5, 1, 1.5)))
+
+    return deck
+end

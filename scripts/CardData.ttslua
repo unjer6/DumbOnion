@@ -1,0 +1,1137 @@
+-- a list of every tts card object in the game translated into dominion card including event type cards as well as fan cards
+-- ordered by expansion/group and then by cost and then by alphabetical (except for the basic cards)
+-- order follows the order on the dominion wiki
+cards = {                                                                                                               -- NEEDS TO BE REWORKED
+    ["_Template"] = {
+        set = "Dominion",   -- the expansion this card first appears in
+        -- how this card is used to play dominion
+        -- Card is something that goes in your deck
+        -- Kingdom are cards that can be used to setup the kingdom and are random each game
+        -- Basic and Non-Supply tells you where it is found
+        -- Starter is a card that can start in your opening deck
+        -- Sideways are cards that show up in the supply turned sideways
+        -- Extra is anything like artifacts, states, boons, etc which are outside the game
+        class = {"Card", "Kingdom"},
+        cost = {Money = 3, Debt = 2},  -- Money, Debt, Potion
+        type = {"Action", "Treasure"},  -- Action, Treasure, Victory, etc
+        vp = 0,     -- how many vp this card is worth (uses score funciton instead if its present)
+        supplyCount = 12,   -- how many copies should be spawned in the supply pile (defaults to 10 if none is provided)
+        -- returns the score this card or landmark gives
+        -- deckLists - a table of every player's deck list (needed for Keep or similar effects)
+        -- playerColor - the player that is scoring this card
+        -- object - the card or deck object containing it that is being scored
+        nonSupply = {"foo", "bar"}, -- what non-Supply cards this card needs (can also be a single string instead of a table)
+        matsAndTokens = {"foo", "bar"}, -- what mats or tokens this card needs (can also be a single string instead of a table)
+        extras = {["Boons"] = true, ["Artifacts"] = "Horn"}, -- what extra materials this card needs
+        replacement = "Knights",   -- the name of the pile that replaces this randomizer card (Knights, Castles, etc)
+        sheet = { name = "", position = 0},             -- info about the spritesheet used and the position on the sheet
+        getDependencies = function(board, boardSettings) end,   -- add any additional dependencies to board (black market, etc)
+        setup = function(board, zone) end, -- if this card needs any special setup
+        getSupplyCount = function(board) end,    -- used to calculate the supply count (this is used instead of supplyCount if it is present)
+        score = function(deckLists, playerColor, object) end   -- used to score this card
+    },
+    -- Official Cards
+    -- BASIC CARDS //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ["Copper"]   = { set = "Dominion", class = {"Card", "Basic", "Starter"}, cost = {Money = 0},  type = {"Treasure"},         sheet = {name = "Basics", position = 5} },
+    ["Silver"]   = { set = "Dominion", class = {"Card", "Basic"},            cost = {Money = 3},  type = {"Treasure"},         sheet = {name = "Basics", position = 6} },
+    ["Gold"]     = { set = "Dominion", class = {"Card", "Basic"},            cost = {Money = 6},  type = {"Treasure"},         sheet = {name = "Basics", position = 7} },
+    ["Estate"]   = { set = "Dominion", class = {"Card", "Basic", "Starter"}, cost = {Money = 2},  type = {"Victory"}, vp = 1,  sheet = {name = "Basics", position = 1} },
+    ["Duchy"]    = { set = "Dominion", class = {"Card", "Basic"},            cost = {Money = 5},  type = {"Victory"}, vp = 3,  sheet = {name = "Basics", position = 2} },
+    ["Province"] = { set = "Dominion", class = {"Card", "Basic"},            cost = {Money = 8},  type = {"Victory"}, vp = 6,  sheet = {name = "Basics", position = 3} },
+    ["Curse"]    = { set = "Dominion", class = {"Card", "Basic"},            cost = {Money = 0},  type = {"Curse"},   vp = -1, sheet = {name = "Basics", position = 0} },
+    -- DOMINION //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ["Cellar"]     = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},             sheet = {name = "Dominion", position = 0 } },
+    ["Chapel"]     = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},             sheet = {name = "Dominion", position = 1} },
+    ["Moat"]       = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action", "Reaction"}, sheet = {name = "Dominion", position = 2} },
+    ["Harbinger"]  = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},             sheet = {name = "Dominion", position = 3} },
+    ["Merchant"]   = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},             sheet = {name = "Dominion", position = 6} },
+    ["Vassal"]     = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},             sheet = {name = "Dominion", position = 7} },
+    ["Village"]    = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},             sheet = {name = "Dominion", position = 4} },
+    ["Workshop"]   = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},             sheet = {name = "Dominion", position = 5} },
+    ["Bureaucrat"] = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Attack"},   sheet = {name = "Dominion", position = 13} },
+    ["Gardens"]    = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Victory"},            sheet = {name = "Dominion", position = 15},
+        score = function(deckLists, playerColor)
+            return math.floor(getCount(deckLists[playerColor]) / 10)
+        end
+    },
+    ["Militia"]      = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Attack"}, sheet = {name = "Dominion", position = 14} },
+    ["Moneylender"]  = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},           sheet = {name = "Dominion", position = 10} },
+    ["Poacher"]      = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},           sheet = {name = "Dominion", position = 11} },
+    ["Remodel"]      = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},           sheet = {name = "Dominion", position = 9} },
+    ["Smithy"]       = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},           sheet = {name = "Dominion", position = 8} },
+    ["Throne Room"]  = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},           sheet = {name = "Dominion", position = 12} },
+    ["Bandit"]       = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"}, sheet = {name = "Dominion", position = 24} },
+    ["Council Room"] = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},           sheet = {name = "Dominion", position = 16} },
+    ["Festival"]     = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},           sheet = {name = "Dominion", position = 21} },
+    ["Laboratory"]   = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},           sheet = {name = "Dominion", position = 22} },
+    ["Library"]      = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},           sheet = {name = "Dominion", position = 20} },
+    ["Market"]       = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},           sheet = {name = "Dominion", position = 17} },
+    ["Mine"]         = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},           sheet = {name = "Dominion", position = 18} },
+    ["Sentry"]       = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},           sheet = {name = "Dominion", position = 19} },
+    ["Witch"]        = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"}, sheet = {name = "Dominion", position = 23} },
+    ["Artisan"]      = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 6}, type = {"Action"},           sheet = {name = "Dominion", position = 25} },
+    -- Cut Cards
+    ["Chancellor"]   = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Woodcutter"]   = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Feast"]        = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Spy"]          = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Attack"}, sheet = {name = "", position = "00"} },
+    ["Thief"]        = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Attack"}, sheet = {name = "", position = "00"} },
+    ["Adventurer"]   = { set = "Dominion", class = {"Card", "Kingdom"}, cost = {Money = 6}, type = {"Action"},           sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// INTRIGUE
+    ["Courtyard"]      = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Lurker"]         = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Pawn"]           = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Masquerade"]     = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Shanty Town"]    = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Steward"]        = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Swindler"]       = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action", "Attack"},            sheet = {name = "", position = "00"} },
+    ["Wishing Well"]   = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Baron"]          = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Bridge"]         = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Conspirator"]    = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Diplomat"]       = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Reaction"},          sheet = {name = "", position = "00"} },
+    ["Ironworks"]      = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Mill"]           = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Victory"},   vp = 1, sheet = {name = "", position = "00"} },
+    ["Mining Village"] = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Secret Passage"] = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Courtier"]       = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Duke"]           = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Victory"},                     sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor)
+            return deckLists[playerColor]["Duchy"] or 0
+        end
+    },
+    ["Minion"]         = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"},            sheet = {name = "", position = "00"} },
+    ["Patrol"]         = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Replace"]        = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"},            sheet = {name = "", position = "00"} },
+    ["Torturer"]       = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"},            sheet = {name = "", position = "00"} },
+    ["Trading Post"]   = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Upgrade"]        = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Harem"]          = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 6}, type = {"Treasure", "Victory"}, vp = 2, sheet = {name = "", position = "00"} },
+    ["Nobles"]         = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 6}, type = {"Action", "Victory"},   vp = 2, sheet = {name = "", position = "00"} },
+    -- Cut Cards
+    ["Secret Chamber"] = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action", "Reaction"},          sheet = {name = "", position = "00"} },
+    ["Great Hall"]     = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action", "Victory"},   vp = 1, sheet = {name = "", position = "00"} },
+    ["Coppersmith"]    = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Scout"]          = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Saboteur"]       = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"},            sheet = {name = "", position = "00"} },
+    ["Tribute"]        = { set = "Intrigue", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// SEASIDE
+    ["Embargo"]         = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},            matsAndTokens = {"Embargo Tokens"},     sheet = {name = "", position = "00"} },
+    ["Haven"]           = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action", "Duration"},                                        sheet = {name = "", position = "00"} },
+    ["Lighthouse"]      = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action", "Duration"},                                        sheet = {name = "", position = "00"} },
+    ["Native Village"]  = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},            matsAndTokens = {"Native Village Mat"}, sheet = {name = "", position = "00"} },
+    ["Pearl Diver"]     = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Ambassador"]      = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action", "Attack"},                                          sheet = {name = "", position = "00"} },
+    ["Fishing Village"] = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action", "Duration"},                                        sheet = {name = "", position = "00"} },
+    ["Lookout"]         = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Smugglers"]       = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Warehouse"]       = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Caravan"]         = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Duration"},                                        sheet = {name = "", position = "00"} },
+    ["Cutpurse"]        = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Attack"},                                          sheet = {name = "", position = "00"} },
+    ["Island"]          = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Victory"}, matsAndTokens = {"Island Mat"}, vp = 2, sheet = {name = "", position = "00"} },
+    ["Navigator"]       = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Pirate Ship"]     = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Attack"},  matsAndTokens = {"Pirate Ship Coins"},  sheet = {name = "", position = "00"} },
+    ["Salvager"]        = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Sea Hag"]         = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Attack"},                                          sheet = {name = "", position = "00"} },
+    ["Treasure Map"]    = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Bazaar"]          = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Explorer"]        = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Ghost Ship"]      = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"},                                          sheet = {name = "", position = "00"} },
+    ["Merchant Ship"]   = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Duration"},                                        sheet = {name = "", position = "00"} },
+    ["Outpost"]         = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Duration"},                                        sheet = {name = "", position = "00"} },
+    ["Tactician"]       = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Duration"},                                        sheet = {name = "", position = "00"} },
+    ["Treasury"]        = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                                                    sheet = {name = "", position = "00"} },
+    ["Wharf"]           = { set = "Seaside", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Duration"},                                        sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// ALCHEMY
+    ["Transmute"]           = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Potion = 1},            type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Vineyard"]            = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Potion = 1},            type = {"Victory"},          sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor)
+            return math.floor(sumTable(table.filter(deckLists[playerColor], function(_, k) return cards[k] and cards[k].type and hasValue(cards[k].type, "Action") end)) / 3)
+        end
+    },
+    ["Herbalist"]           = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Money = 2},             type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Apothecary"]          = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Money = 2, Potion = 1}, type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Scrying Pool"]        = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Money = 2, Potion = 1}, type = {"Action", "Attack"}, sheet = {name = "", position = "00"} },
+    ["University"]          = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Money = 2, Potion = 1}, type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Alchemist"]           = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Money = 3, Potion = 1}, type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Familiar"]            = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Money = 3, Potion = 1}, type = {"Action", "Attack"}, sheet = {name = "", position = "00"} },
+    ["Golem"]               = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Money = 4, Potion = 1}, type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Apprentice"]          = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Money = 5},             type = {"Action"},           sheet = {name = "", position = "00"} },
+    ["Possession"]          = { set = "Alchemy", class = {"Card", "Kingdom"}, cost = {Money = 6, Potion = 1}, type = {"Action"},           sheet = {name = "", position = "00"} },
+    -- Basic Cards
+    ["Potion"]              = { set = "Alchemy", class = {"Card", "Basic"},   cost = {Money = 4},             type = {"Treasure"},         sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// PROSPERITY
+    ["Loan"]             = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 3},  type = {"Treasure"},                                              sheet = {name = "", position = "00"} },
+    ["Trade Route"]      = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 3},  type = {"Action"},           matsAndTokens = {"Trade Route Mat"}, sheet = {name = "", position = "00"} },
+    ["Watchtower"]       = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 3},  type = {"Action", "Reaction"},                                    sheet = {name = "", position = "00"} },
+    ["Bishop"]           = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 4},  type = {"Action"},           matsAndTokens = {"Victory Points"},  sheet = {name = "", position = "00"} },
+    ["Monument"]         = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 4},  type = {"Action"},           matsAndTokens = {"Victory Points"},  sheet = {name = "", position = "00"} },
+    ["Quarry"]           = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 4},  type = {"Treasure"},                                              sheet = {name = "", position = "00"} },
+    ["Talisman"]         = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 4},  type = {"Treasure"},                                              sheet = {name = "", position = "00"} },
+    ["Worker's Village"] = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 4},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    ["City"]             = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 5},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    ["Contraband"]       = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 5},  type = {"Treasure"},                                              sheet = {name = "", position = "00"} },
+    ["Counting House"]   = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 5},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    ["Mint"]             = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 5},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    ["Mountebank"]       = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 5},  type = {"Action", "Attack"},                                      sheet = {name = "", position = "00"} },
+    ["Rabble"]           = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 5},  type = {"Action", "Attack"},                                      sheet = {name = "", position = "00"} },
+    ["Royal Seal"]       = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 5},  type = {"Treasure"},                                              sheet = {name = "", position = "00"} },
+    ["Vault"]            = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 5},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    ["Venture"]          = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 5},  type = {"Treasure"},                                              sheet = {name = "", position = "00"} },
+    ["Goons"]            = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 6},  type = {"Action", "Attack"}, matsAndTokens = {"Victory Points"},  sheet = {name = "", position = "00"} },
+    ["Grand Market"]     = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 6},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    ["Hoard"]            = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 6},  type = {"Treasure"},                                              sheet = {name = "", position = "00"} },
+    ["Bank"]             = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 7},  type = {"Treasure"},                                              sheet = {name = "", position = "00"} },
+    ["Expand"]           = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 7},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    ["Forge"]            = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 7},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    ["King's Court"]     = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 7},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    ["Peddler"]          = { set = "Prosperity", class = {"Card", "Kingdom"}, cost = {Money = 8},  type = {"Action"},                                                sheet = {name = "", position = "00"} },
+    -- Basic Cards
+    ["Platinum"]         = { set = "Prosperity", class = {"Card", "Basic"},   cost = {Money = 9},  type = {"Treasure"},                                              sheet = {name = "", position = "00"} },
+    ["Colony"]           = { set = "Prosperity", class = {"Card", "Basic"},   cost = {Money = 11}, type = {"Victory"}, vp = 10,                                      sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// CORNUCOPIA
+    ["Hamlet"]          = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 2}, type = {"Action"},                                   sheet = {name = "", position = "00"} },
+    ["Fortune Teller"]  = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 3}, type = {"Action", "Attack"},                         sheet = {name = "", position = "00"} },
+    ["Menagerie"]       = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 3}, type = {"Action"},                                   sheet = {name = "", position = "00"} },
+    ["Farming Village"] = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                                   sheet = {name = "", position = "00"} },
+    ["Horse Traders"]   = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action", "Reaction"},                       sheet = {name = "", position = "00"} },
+    ["Remake"]          = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                                   sheet = {name = "", position = "00"} },
+    ["Tournament"]      = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},           nonSupply = {"Prizes"}, sheet = {name = "", position = "00"} },
+    ["Young Witch"]     = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action", "Attack"},                         sheet = {name = "", position = "00"},
+        getDependencies = function(board, boardSettings)
+            local zone = getObjectFromGUID(kingdomPiles["Bane"] and kingdomPiles["Bane"].guids and kingdomPiles["Bane"].guids["Zone"])
+            if not zone then
+                printToAll("ERROR: Young Witch cannot setup. No zone was found for the Bane pile.", Color.Red)
+                board.isDirty = true
+                return
+            else
+                local cardName = boardSettings:ReadSlot(zone)
+                if boardSettings.otherSettings["Bane"] then
+                    if cardName then
+                        printToAll("ERROR: Young Witch cannot setup. There cannot be a card in the Bane pile if using settings.", Color.Red)
+                        board.isDirty = true
+                        return
+                    end
+                    board:AddKingdomPile(boardSettings.otherSettings["Bane"], "Bane")
+                elseif cardName then
+                    board:AddKingdomPile(cardName, "Bane")
+                else
+                    -- draw a card from the randomizer
+                    local card = dealRandomizerCard()
+                    if not card then
+                        printToAll("ERROR: Young Witch cannot setup. No Randomizer card was able to be drawn for the Bane pile.", Color.Red)
+                        board.isDirty = true
+                        return
+                    else
+                        local pos = zone.getPosition()
+                        pos.y = 1
+                        card.setPositionSmooth(pos, false, false)
+                        card.setRotation(vector(0, 180, 0))
+                        board:AddKingdomPile(card.getName(), "Bane")
+
+                        function youngWitchCoroutine()
+                            board.coroutinesRunning = board.coroutinesRunning + 1
+                            for i = 1, 60 do
+                                coroutine.yield(0)
+                            end
+                            board.coroutinesRunning = board.coroutinesRunning - 1
+
+                            return 1
+                        end
+
+                        startLuaCoroutine(self, "youngWitchCoroutine")
+                    end
+                end
+            end
+        end
+    },
+    ["Harvest"]         = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                   sheet = {name = "", position = "00"} },
+    ["Horn of Plenty"]  = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Treasure"},                                 sheet = {name = "", position = "00"} },
+    ["Hunting Party"]   = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                   sheet = {name = "", position = "00"} },
+    ["Jester"]          = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack"},                         sheet = {name = "", position = "00"} },
+    ["Fairgrounds"]     = { set = "Cornucopia", class = {"Card", "Kingdom"},    cost = {Money = 6}, type = {"Victory"},                                  sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor)
+            return math.floor(getCount(deckLists[playerColor]) / 5) * 2
+        end
+    },
+    -- Prizes
+    ["Bag of Gold"]     = { set = "Cornucopia", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Action", "Prize"},                          sheet = {name = "", position = "00"} },
+    ["Diadem"]          = { set = "Cornucopia", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Treasure", "Prize"},                        sheet = {name = "", position = "00"} },
+    ["Followers"]       = { set = "Cornucopia", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Action", "Attack", "Prize"},                sheet = {name = "", position = "00"} },
+    ["Princess"]        = { set = "Cornucopia", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Action", "Prize"},                          sheet = {name = "", position = "00"} },
+    ["Trusty Steed"]    = { set = "Cornucopia", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Action", "Prize"},                          sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// HINTERLANDS
+    ["Crossroads"]         = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Duchess"]            = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Fool's Gold"]        = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Treasure", "Reaction"},        sheet = {name = "", position = "00"} },
+    ["Develop"]            = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Oasis"]              = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Oracle"]             = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action", "Attack"},            sheet = {name = "", position = "00"} },
+    ["Scheme"]             = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Tunnel"]             = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Victory", "Reaction"}, vp = 2, sheet = {name = "", position = "00"} },
+    ["Jack of All Trades"] = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Noble Brigand"]      = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Attack"},            sheet = {name = "", position = "00"} },
+    ["Nomad Camp"]         = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Silk Road"]          = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Victory"},                     sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor)
+            return math.floor(sumTable(table.filter(deckLists[playerColor], function(_, k) return cards[k] and cards[k].type and hasValue(cards[k].type, "Victory") end)) / 4)
+        end
+    },
+    ["Spice Merchant"]     = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Trader"]             = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Reaction"},          sheet = {name = "", position = "00"} },
+    ["Cache"]              = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Treasure"},                    sheet = {name = "", position = "00"} },
+    ["Cartographer"]       = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Embassy"]            = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Haggler"]            = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Highway"]            = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Ill-Gotten Gains"]   = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Treasure"},                    sheet = {name = "", position = "00"} },
+    ["Inn"]                = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Mandarin"]           = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Margrave"]           = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"},            sheet = {name = "", position = "00"} },
+    ["Stables"]            = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Border Village"]     = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 6}, type = {"Action"},                      sheet = {name = "", position = "00"} },
+    ["Farmland"]           = { set = "Hinterlands", class = {"Card", "Kingdom"}, cost = {Money = 6}, type = {"Victory"},             vp = 2, sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// DARK AGES
+    ["Poor House"]    = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 1}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Beggar"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 2}, type = {"Action", "Reaction"},                                                 sheet = {name = "", position = "00"} },
+    ["Squire"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 2}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Vagrant"]       = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 2}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Forager"]       = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 3}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Hermit"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 3}, type = {"Action"},                     nonSupply = {"Madman Pile"},            sheet = {name = "", position = "00"} },
+    ["Market Square"] = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 3}, type = {"Action", "Reaction"},                                                 sheet = {name = "", position = "00"} },
+    ["Sage"]          = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 3}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Storeroom"]     = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 3}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Urchin"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 3}, type = {"Action", "Attack"},           nonSupply = {"Mercenary Pile"},         sheet = {name = "", position = "00"} },
+    ["Armory"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 4}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Death Cart"]    = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 4}, type = {"Action", "Looter"},                                                   sheet = {name = "", position = "00"} },
+    ["Feodum"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},         cost = {Money = 4}, type = {"Victory"},                                                            sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor)
+            return (deckLists[playerColor]["Silver"] and math.floor(deckLists[playerColor]["Silver"] / 3)) or 0
+        end
+    },
+    ["Fortress"]           = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Ironmonger"]         = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Marauder"]           = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action", "Attack", "Looter"}, nonSupply = {"Spoils Pile"},            sheet = {name = "", position = "00"} },
+    ["Procession"]         = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Rats"]               = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"}, supplyCount = 20,                                           sheet = {name = "", position = "00"} },
+    ["Scavenger"]          = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Wandering Minstrel"] = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Band of Misfits"]    = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Bandit Camp"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                     nonSupply = {"Spoils Pile"},            sheet = {name = "", position = "00"} },
+    ["Catacombs"]          = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Count"]              = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Counterfeit"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Treasure"},                                                           sheet = {name = "", position = "00"} },
+    ["Cultist"]            = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Looter"},                                         sheet = {name = "", position = "00"} },
+    ["Graverobber"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Junk Dealer"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Knights"]            = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight"}, replacement = "Knights",                sheet = {name = "", position = "00"} }, -- the Knights setup card
+    ["Mystic"]             = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Pillage"]            = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack"},           nonSupply = {"Spoils Pile"},            sheet = {name = "", position = "00"} },
+    ["Rebuild"]            = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Rogue"]              = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack"},                                                   sheet = {name = "", position = "00"} },
+    ["Altar"]              = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 6}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Hunting Grounds"]    = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 6}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    -- Knights
+    ["Dame Anna"]          = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight"},                                         sheet = {name = "", position = "00"} },
+    ["Dame Josephine"]     = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight", "Victory"}, vp = 2,                      sheet = {name = "", position = "00"} },
+    ["Dame Molly"]         = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight"},                                         sheet = {name = "", position = "00"} },
+    ["Dame Natalie"]       = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight"},                                         sheet = {name = "", position = "00"} },
+    ["Dame Sylvia"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight"},                                         sheet = {name = "", position = "00"} },
+    ["Sir Bailey"]         = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight"},                                         sheet = {name = "", position = "00"} },
+    ["Sir Destry"]         = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight"},                                         sheet = {name = "", position = "00"} },
+    ["Sir Martin"]         = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action", "Attack", "Knight"},                                         sheet = {name = "", position = "00"} },
+    ["Sir Michael"]        = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight"},                                         sheet = {name = "", position = "00"} },
+    ["Sir Vander"]         = { set = "Dark Ages", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Knight"},                                         sheet = {name = "", position = "00"} },
+    -- Ruins
+    ["Abandoned Mine"]     = { set = "Dark Ages", class = {"Card", "Basic"},      cost = {Money = 0}, type = {"Action", "Ruins"},                                                    sheet = {name = "", position = "00"} },
+    ["Ruined Library"]     = { set = "Dark Ages", class = {"Card", "Basic"},      cost = {Money = 0}, type = {"Action", "Ruins"},                                                    sheet = {name = "", position = "00"} },
+    ["Ruined Market"]      = { set = "Dark Ages", class = {"Card", "Basic"},      cost = {Money = 0}, type = {"Action", "Ruins"},                                                    sheet = {name = "", position = "00"} },
+    ["Ruined Village"]     = { set = "Dark Ages", class = {"Card", "Basic"},      cost = {Money = 0}, type = {"Action", "Ruins"},                                                    sheet = {name = "", position = "00"} },
+    ["Survivors"]          = { set = "Dark Ages", class = {"Card", "Basic"},      cost = {Money = 0}, type = {"Action", "Ruins"},                                                    sheet = {name = "", position = "00"} },
+    -- Shelters
+    ["Hovel"]              = { set = "Dark Ages", class = {"Card", "Starter"},    cost = {Money = 1}, type = {"Reaction", "Shelter"},                                                sheet = {name = "", position = "00"} },
+    ["Necropolis"]         = { set = "Dark Ages", class = {"Card", "Starter"},    cost = {Money = 1}, type = {"Action", "Shelter"},                                                  sheet = {name = "", position = "00"} },
+    ["Overgrown Estate"]   = { set = "Dark Ages", class = {"Card", "Starter"},    cost = {Money = 1}, type = {"Victory", "Shelter"},                    vp = 0,                      sheet = {name = "", position = "00"} },
+    -- Non-supply
+    ["Madman"]             = { set = "Dark Ages", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Action"},                                                             sheet = {name = "", position = "00"} },
+    ["Mercenary"]          = { set = "Dark Ages", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Action", "Attack"},                                                   sheet = {name = "", position = "00"} },
+    ["Spoils"]             = { set = "Dark Ages", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Treasure"},                                                           sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// GUILDS
+    ["Candlestick Maker"] = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"}, matsAndTokens = {"Coffers"}, sheet = {name = "", position = "00"} },
+    ["Stonemason"]        = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},                              sheet = {name = "", position = "00"} },
+    ["Doctor"]            = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                              sheet = {name = "", position = "00"} },
+    ["Masterpiece"]       = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Treasure"},                            sheet = {name = "", position = "00"} },
+    ["Advisor"]           = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                              sheet = {name = "", position = "00"} },
+    ["Plaza"]             = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"}, matsAndTokens = {"Coffers"}, sheet = {name = "", position = "00"} },
+    ["Taxman"]            = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Attack"},                    sheet = {name = "", position = "00"} },
+    ["Herald"]            = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                              sheet = {name = "", position = "00"} },
+    ["Baker"]             = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"}, matsAndTokens = {"Coffers"}, sheet = {name = "", position = "00"} },
+    ["Butcher"]           = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"}, matsAndTokens = {"Coffers"}, sheet = {name = "", position = "00"} },
+    ["Journeyman"]        = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                              sheet = {name = "", position = "00"} },
+    ["Merchant Guild"]    = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"}, matsAndTokens = {"Coffers"}, sheet = {name = "", position = "00"} },
+    ["Soothsayer"]        = { set = "Guilds", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"},                    sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// ADVENTURES
+    ["Coin of the Realm"] = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 2}, type = {"Treasure", "Reserve"},                                                                                                  sheet = {name = "", position = "00"} },
+    ["Page"]              = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 2}, type = {"Action", "Traveller"},          nonSupply = {"Treasure Hunter Pile"},                                                   sheet = {name = "", position = "00"} },
+    ["Peasant"]           = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 2}, type = {"Action", "Traveller"},          nonSupply = {"Soldier Pile"},                                                           sheet = {name = "", position = "00"} },
+    ["Ratcatcher"]        = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 2}, type = {"Action", "Reserve"},                                                                                                    sheet = {name = "", position = "00"} },
+    ["Raze"]              = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 2}, type = {"Action"},                                                                                                               sheet = {name = "", position = "00"} },
+    ["Amulet"]            = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 3}, type = {"Action", "Duration"},                                                                                                   sheet = {name = "", position = "00"} },
+    ["Caravan Guard"]     = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 3}, type = {"Action", "Duration", "Reaction"},                                                                                       sheet = {name = "", position = "00"} },
+    ["Dungeon"]           = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 3}, type = {"Action", "Duration"},                                                                                                   sheet = {name = "", position = "00"} },
+    ["Gear"]              = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 3}, type = {"Action", "Duration"},                                                                                                   sheet = {name = "", position = "00"} },
+    ["Guide"]             = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 3}, type = {"Action", "Reserve"},                                                                                                    sheet = {name = "", position = "00"} },
+    ["Duplicate"]         = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 4}, type = {"Action", "Reserve"},                                                                                                    sheet = {name = "", position = "00"} },
+    ["Magpie"]            = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 4}, type = {"Action"},                                                                                                               sheet = {name = "", position = "00"} },
+    ["Messenger"]         = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 4}, type = {"Action"},                                                                                                               sheet = {name = "", position = "00"} },
+    ["Miser"]             = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 4}, type = {"Action"},                       matsAndTokens = {"Tavern Mat"},                                                         sheet = {name = "", position = "00"} },
+    ["Port"]              = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 4}, type = {"Action"},                       supplyCount = 12,                                                                       sheet = {name = "", position = "00"} },
+    ["Ranger"]            = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 4}, type = {"Action"},                       matsAndTokens = {"Journey Token"},                                                      sheet = {name = "", position = "00"} },
+    ["Transmogrify"]      = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 4}, type = {"Action", "Reserve"},                                                                                                    sheet = {name = "", position = "00"} },
+    ["Artificer"]         = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action"},                                                                                                               sheet = {name = "", position = "00"} },
+    ["Bridge Troll"]      = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action", "Attack", "Duration"}, matsAndTokens = {"-1 Coin Token"},                                                      sheet = {name = "", position = "00"} },
+    ["Distant Lands"]     = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action", "Reserve", "Victory"},                                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            if hasValue(object.getZones(), objects.players[playerColor].zones["Tavern Mat"]) then return 4 end
+            return 0
+        end
+    },
+    ["Giant"]             = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action", "Attack"},             matsAndTokens = {"Journey Token"},                                                      sheet = {name = "", position = "00"} },
+    ["Haunted Woods"]     = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action", "Attack", "Duration"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Lost City"]         = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action"},                                                                                                               sheet = {name = "", position = "00"} },
+    ["Relic"]             = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Treasure", "Attack"},           matsAndTokens = {"-1 Card Token"},                                                      sheet = {name = "", position = "00"} },
+    ["Royal Carriage"]    = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action", "Reserve"},                                                                                                    sheet = {name = "", position = "00"} },
+    ["Storyteller"]       = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action"},                                                                                                               sheet = {name = "", position = "00"} },
+    ["Swamp Hag"]         = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action", "Attack", "Duration"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Treasure Trove"]    = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Treasure"},                                                                                                             sheet = {name = "", position = "00"} },
+    ["Wine Merchant"]     = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 5}, type = {"Action", "Reserve"},                                                                                                    sheet = {name = "", position = "00"} },
+    ["Hireling"]          = { set = "Adventures", class = {"Card", "Kingdom"},     cost = {Money = 6}, type = {"Action", "Duration"},                                                                                                   sheet = {name = "", position = "00"} },
+    -- Traveller Upgrades
+    ["Treasure Hunter"]   = { set = "Adventures", class = {"Card", "Non-Supply"},  cost = {Money = 3}, type = {"Action", "Traveller"},           nonSupply = {"Warrior Pile"},                                                          sheet = {name = "", position = "00"} },
+    ["Warrior"]           = { set = "Adventures", class = {"Card", "Non-Supply"},  cost = {Money = 4}, type = {"Action", "Attack", "Traveller"}, nonSupply = {"Hero Pile"},                                                             sheet = {name = "", position = "00"} },
+    ["Hero"]              = { set = "Adventures", class = {"Card", "Non-Supply"},  cost = {Money = 5}, type = {"Action", "Traveller"},           nonSupply = {"Champion Pile"},                                                         sheet = {name = "", position = "00"} },
+    ["Champion"]          = { set = "Adventures", class = {"Card", "Non-Supply"},  cost = {Money = 6}, type = {"Action", "Duration"},                                                                                                   sheet = {name = "", position = "00"} },
+    ["Soldier"]           = { set = "Adventures", class = {"Card", "Non-Supply"},  cost = {Money = 3}, type = {"Action", "Attack", "Traveller"}, nonSupply = {"Fugitive Pile"},                                                         sheet = {name = "", position = "00"} },
+    ["Fugitive"]          = { set = "Adventures", class = {"Card", "Non-Supply"},  cost = {Money = 4}, type = {"Action", "Traveller"},           nonSupply = {"Disciple Pile"},                                                         sheet = {name = "", position = "00"} },
+    ["Disciple"]          = { set = "Adventures", class = {"Card", "Non-Supply"},  cost = {Money = 5}, type = {"Action", "Traveller"},           nonSupply = {"Teacher Pile"},                                                          sheet = {name = "", position = "00"} },
+    ["Teacher"]           = { set = "Adventures", class = {"Card", "Non-Supply"},  cost = {Money = 6}, type = {"Action", "Reserve"},             matsAndTokens = {"+1 Card Token", "+1 Action Token", "+1 Buy Token", "+1 Coin Token"}, sheet = {name = "", position = "00"} },
+    -- Events
+    ["Alms"]              = { set = "Adventures", class = {"Sideways"},            cost = {Money = 0}, type = {"Event"},                                                                                                                sheet = {name = "", position = "00"} },
+    ["Borrow"]            = { set = "Adventures", class = {"Sideways"},            cost = {Money = 0}, type = {"Event"},                         matsAndTokens = {"-1 Card Token"},                                                     sheet = {name = "", position = "00"} },
+    ["Quest"]             = { set = "Adventures", class = {"Sideways"},            cost = {Money = 0}, type = {"Event"},                                                                                                                sheet = {name = "", position = "00"} },
+    ["Save"]              = { set = "Adventures", class = {"Sideways"},            cost = {Money = 1}, type = {"Event"},                         matsAndTokens = {"Set Aside Token"},                                                   sheet = {name = "", position = "00"} },
+    ["Scouting Party"]    = { set = "Adventures", class = {"Sideways"},            cost = {Money = 2}, type = {"Event"},                                                                                                                sheet = {name = "", position = "00"} },
+    ["Travelling Fair"]   = { set = "Adventures", class = {"Sideways"},            cost = {Money = 2}, type = {"Event"},                                                                                                                sheet = {name = "", position = "00"} },
+    ["Bonfire"]           = { set = "Adventures", class = {"Sideways"},            cost = {Money = 3}, type = {"Event"},                                                                                                                sheet = {name = "", position = "00"} },
+    ["Expedition"]        = { set = "Adventures", class = {"Sideways"},            cost = {Money = 3}, type = {"Event"},                                                                                                                sheet = {name = "", position = "00"} },
+    ["Ferry"]             = { set = "Adventures", class = {"Sideways"},            cost = {Money = 3}, type = {"Event"},                         matsAndTokens = {"-2 Cost Token"},                                                     sheet = {name = "", position = "00"} },
+    ["Plan"]              = { set = "Adventures", class = {"Sideways"},            cost = {Money = 3}, type = {"Event"},                         matsAndTokens = {"Trashing Token"},                                                    sheet = {name = "", position = "00"} },
+    ["Mission"]           = { set = "Adventures", class = {"Sideways"},            cost = {Money = 4}, type = {"Event"},                                                                                                                sheet = {name = "", position = "00"} },
+    ["Pilgrimage"]        = { set = "Adventures", class = {"Sideways"},            cost = {Money = 4}, type = {"Event"},                         matsAndTokens = {"Journey Token"},                                                     sheet = {name = "", position = "00"} },
+    ["Ball"]              = { set = "Adventures", class = {"Sideways"},            cost = {Money = 5}, type = {"Event"},                         matsAndTokens = {"-1 Coin Token"},                                                     sheet = {name = "", position = "00"} },
+    ["Raid"]              = { set = "Adventures", class = {"Sideways"},            cost = {Money = 5}, type = {"Event"},                         matsAndTokens = {"-1 Card Token"},                                                     sheet = {name = "", position = "00"} },
+    ["Seaway"]            = { set = "Adventures", class = {"Sideways"},            cost = {Money = 5}, type = {"Event"},                         matsAndTokens = {"+1 Buy Token"},                                                      sheet = {name = "", position = "00"} },
+    ["Trade"]             = { set = "Adventures", class = {"Sideways"},            cost = {Money = 5}, type = {"Event"},                                                                                                                sheet = {name = "", position = "00"} },
+    ["Lost Arts"]         = { set = "Adventures", class = {"Sideways"},            cost = {Money = 6}, type = {"Event"},                         matsAndTokens = {"+1 Action Token"},                                                   sheet = {name = "", position = "00"} },
+    ["Training"]          = { set = "Adventures", class = {"Sideways"},            cost = {Money = 6}, type = {"Event"},                         matsAndTokens = {"+1 Coin Token"},                                                     sheet = {name = "", position = "00"} },
+    ["Inheritance"]       = { set = "Adventures", class = {"Sideways"},            cost = {Money = 7}, type = {"Event"},                         matsAndTokens = {"Estate Token"},                                                      sheet = {name = "", position = "00"} },
+    ["Pathfinding"]       = { set = "Adventures", class = {"Sideways"},            cost = {Money = 8}, type = {"Event"},                         matsAndTokens = {"+1 Card Token"},                                                     sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// EMPIRES
+    ["Engineer"]                    = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Debt = 4},            type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["City Quarter"]                = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Debt = 8},            type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Overlord"]                    = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Debt = 8},            type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Royal Blacksmith"]            = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Debt = 8},            type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Encampment / Plunder"]        = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 2},           type = {"Action"},                              replacement = "Encampment / Plunder",        sheet = {name = "", position = "00"} },   -- split pile setup card
+    ["Encampment"]                  = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 2},           type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Plunder"]                     = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Treasure"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Patrician / Emporium"]        = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 2},           type = {"Action"},                              replacement = "Patrician / Emporium",        sheet = {name = "", position = "00"} },   -- split pile setup card
+    ["Patrician"]                   = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 2},           type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Emporium"]                    = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Action"},                              matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Settlers / Bustling Village"] = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 2},           type = {"Action"},                              replacement = "Settlers / Bustling Village", sheet = {name = "", position = "00"} },    -- split pile setup card
+    ["Settlers"]                    = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 2},           type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Bustling Village"]            = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Castles"]                     = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 3},           type = {"Victory", "Castle"},                   replacement = "Castles",                     sheet = {name = "", position = "00"} },    -- castles setup card
+    ["Catapult / Rocks"]            = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 3},           type = {"Action", "Attack"},                    replacement = "Catapult / Rocks",            sheet = {name = "", position = "00"} },   --split pile setup card
+    ["Catapult"]                    = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 3},           type = {"Action", "Attack"},                                                                 sheet = {name = "", position = "00"} },
+    ["Rocks"]                       = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 4},           type = {"Treasure"},                                                                         sheet = {name = "", position = "00"} },
+    ["Chariot Race"]                = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 3},           type = {"Action"},                              matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Enchantress"]                 = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 3},           type = {"Action", "Attack", "Duration"},                                                     sheet = {name = "", position = "00"} },
+    ["Farmers' Market"]             = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 3},           type = {"Action", "Gathering"},                                                              sheet = {name = "", position = "00"} },
+    ["Gladiator / Fortune"]         = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 3},           type = {"Action"},                              replacement = "Gladiator / Fortune",         sheet = {name = "", position = "00"} },    -- split pile setup card
+    ["Gladiator"]                   = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 3},           type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Fortune"]                     = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 8, Debt = 8}, type = {"Treasure"},                                                                         sheet = {name = "", position = "00"} },
+    ["Sacrifice"]                   = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 4},           type = {"Action"},                              matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Temple"]                      = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 4},           type = {"Action", "Gathering"},                                                              sheet = {name = "", position = "00"} },
+    ["Villa"]                       = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 4},           type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Archive"]                     = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Action", "Duration"},                                                               sheet = {name = "", position = "00"} },
+    ["Capital"]                     = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Treasure"},                            matsAndTokens = {"Debt"},                    sheet = {name = "", position = "00"} },
+    ["Charm"]                       = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Treasure"},                                                                         sheet = {name = "", position = "00"} },
+    ["Crown"]                       = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Action", "Treasure"},                                                               sheet = {name = "", position = "00"} },
+    ["Forum"]                       = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Action"},                                                                           sheet = {name = "", position = "00"} },
+    ["Groundskeeper"]               = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Action"},                              matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Legionary"]                   = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Action", "Attack"},                                                                 sheet = {name = "", position = "00"} },
+    ["Wild Hunt"]                   = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Action", "Gathering"},                                                              sheet = {name = "", position = "00"} },
+    -- Castles
+    ["Humble Castle"]               = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 3},           type = {"Treasure", "Victory", "Castle"},                                                    sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor)
+            return sumTable(table.filter(deckLists[playerColor], function(_, k) return cards[k] and cards[k].type and hasValue(cards[k].type, "Castle") end))
+        end
+    },
+    ["Crumbling Castle"]            = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 4},           type = {"Victory", "Castle"},           vp = 1, matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Small Castle"]                = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 5},           type = {"Action", "Victory", "Castle"}, vp = 2,                                              sheet = {name = "", position = "00"} },
+    ["Haunted Castle"]              = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 6},           type = {"Victory", "Castle"},           vp = 2,                                              sheet = {name = "", position = "00"} },
+    ["Opulent Castle"]              = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 7},           type = {"Action", "Victory", "Castle"}, vp = 3,                                              sheet = {name = "", position = "00"} },
+    ["Sprawling Castle"]            = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 8},           type = {"Victory", "Castle"},           vp = 4,                                              sheet = {name = "", position = "00"} },
+    ["Grand Castle"]                = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 9},           type = {"Victory", "Castle"},           vp = 5, matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["King's Castle"]               = { set = "Empires", class = {"Card", "Kingdom"}, cost = {Money = 10},          type = {"Victory", "Castle"},                                                                sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor)
+            return 2 * sumTable(table.filter(deckLists[playerColor], function(_, k) return cards[k] and cards[k].type and hasValue(cards[k].type, "Castle") end))
+        end
+    },
+    -- Events
+    ["Triumph"]                     = { set = "Empires", class = {"Sideways"},        cost = {Debt = 5},            type = {"Event"},                               matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Annex"]                       = { set = "Empires", class = {"Sideways"},        cost = {Debt = 8},            type = {"Event"},                                                                            sheet = {name = "", position = "00"} },
+    ["Donate"]                      = { set = "Empires", class = {"Sideways"},        cost = {Debt = 8},            type = {"Event"},                                                                            sheet = {name = "", position = "00"} },
+    ["Advance"]                     = { set = "Empires", class = {"Sideways"},        cost = {Money = 0},           type = {"Event"},                                                                            sheet = {name = "", position = "00"} },
+    ["Delve"]                       = { set = "Empires", class = {"Sideways"},        cost = {Money = 2},           type = {"Event"},                                                                            sheet = {name = "", position = "00"} },
+    ["Tax"]                         = { set = "Empires", class = {"Sideways"},        cost = {Money = 2},           type = {"Event"},                               matsAndTokens = {"Debt"},                    sheet = {name = "", position = "00"} },
+    ["Banquet"]                     = { set = "Empires", class = {"Sideways"},        cost = {Money = 3},           type = {"Event"},                                                                            sheet = {name = "", position = "00"} },
+    ["Ritual"]                      = { set = "Empires", class = {"Sideways"},        cost = {Money = 4},           type = {"Event"},                               matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Salt the Earth"]              = { set = "Empires", class = {"Sideways"},        cost = {Money = 4},           type = {"Event"},                               matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Wedding"]                     = { set = "Empires", class = {"Sideways"},        cost = {Money = 4, Debt = 3}, type = {"Event"},                               matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Windfall"]                    = { set = "Empires", class = {"Sideways"},        cost = {Money = 5},           type = {"Event"},                                                                            sheet = {name = "", position = "00"} },
+    ["Conquest"]                    = { set = "Empires", class = {"Sideways"},        cost = {Money = 6},           type = {"Event"},                               matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Dominate"]                    = { set = "Empires", class = {"Sideways"},        cost = {Money = 14},          type = {"Event"},                               matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    -- Landmarks
+    ["Aqueduct"]                    = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Arena"]                       = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Bandit Fort"]                 = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            local total = 0
+            if deckLists[playerColor]["Silver"] then total = total + -2 * deckLists[playerColor]["Silver"] end
+            if deckLists[playerColor]["Gold"] then total = total + -2 * deckLists[playerColor]["Gold"] end
+            return total
+        end
+    },
+    ["Basilica"]                    = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Baths"]                       = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Battlefield"]                 = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Colonnade"]                   = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Defiled Shrine"]              = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Fountain"]                    = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            if deckLists[playerColor]["Copper"] and deckLists[playerColor]["Copper"] >= 10 then return 15 end
+            return 0
+        end
+    },
+    ["Keep"]                        = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            local total = 0
+            local table = table.filter(deckLists[playerColor], function(_, k) return cards[k] and cards[k].type and hasValue(cards[k].type, "Treasure") end)
+            for key, value in pairs(table) do
+                local hasMoreThanAnyone = true
+                for _, color in ipairs(players) do
+                    if Player[color].seated and color ~= playerColor then
+                        if deckLists[color][key] and deckLists[color][key] > value then
+                            hasMoreThanAnyone = false
+                            break
+                        end
+                    end
+                end
+                if hasMoreThanAnyone then total = total + 5 end
+            end
+            return total
+        end
+    },
+    ["Labyrinth"]                   = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Mountain Pass"]               = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Debt", "Victory Points"},  sheet = {name = "", position = "00"} },
+    ["Museum"]                      = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            return 2 * getCount(deckLists[playerColor])
+        end
+    },
+    ["Obelisk"]                     = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function()
+            printToAll("Obelisk isn't implemented yet!")
+            return 0
+        end
+    },
+    ["Orchard"]                     = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            local total = 0
+            for key, value in pairs(deckLists[playerColor]) do
+                if cards[key] and cards[key].type and hasValue(cards[key].type, "Action") then
+                    if value >= 3 then total = total + 4 end
+                end
+            end
+            return total
+        end
+    },
+    ["Palace"]                      = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            if deckLists[playerColor]["Copper"] and deckLists[playerColor]["Silver"] and deckLists[playerColor]["Gold"] then
+                return 3 * math.min(deckLists[playerColor]["Copper"], deckLists[playerColor]["Silver"], deckLists[playerColor]["Gold"])
+            end
+            return 0
+        end
+    },
+    ["Tomb"]                        = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                            matsAndTokens = {"Victory Points"},          sheet = {name = "", position = "00"} },
+    ["Tower"]                       = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function()
+            printToAll("Tower isn't implemented yet!")
+            return 0
+        end
+    },
+    ["Triumphal Arch"]              = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            local highest = 0
+            local secondHighest = 0
+            for key, value in pairs(deckLists[playerColor]) do
+                if cards[key] and hasValue(cards[key].type, "Action") then
+                    if value > secondHighest then secondHighest = value end
+                    if value > highest then secondHighest = highest; highest = value end
+                end
+            end
+            return 3 * secondHighest
+        end
+    },
+    ["Wall"]                        = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            return math.min(15 - sumTable(deckLists[playerColor]), 0)
+        end
+    },
+    ["Wolf Den"]                    = { set = "Empires", class = {"Sideways"},                                      type = {"Landmark"},                                                                         sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor, object)
+            return -3 * getCount(table.filter(deckLists[playerColor], function(v) return v == 1 end))
+        end
+    },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// NOCTURNE
+    ["Druid"]                       = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 2}, type = {"Action", "Fate"},                                                                                 sheet = {name = "", position = "00"} },
+    ["Faithful Hound"]              = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 2}, type = {"Action", "Reaction"},                                                                             sheet = {name = "", position = "00"} },
+    ["Guardian"]                    = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 2}, type = {"Night", "Duration"},                                                                              sheet = {name = "", position = "00"} },
+    ["Monastery"]                   = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 2}, type = {"Night"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Pixie"]                       = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 2}, type = {"Action", "Fate"},                                 heirloom = "Goat",                              sheet = {name = "", position = "00"} },
+    ["Tracker"]                     = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 2}, type = {"Action", "Fate"},                                 heirloom = "Pouch",                             sheet = {name = "", position = "00"} },
+    ["Changeling"]                  = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 3}, type = {"Night"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Fool"]                        = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 3}, type = {"Action", "Fate"},           extras = {["States"] = "Lost in the Woods"}, heirloom = "Lucky Coin", sheet = {name = "", position = "00"} },
+    ["Ghost Town"]                  = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 3}, type = {"Night", "Duration"},                                                                              sheet = {name = "", position = "00"} },
+    ["Leprechaun"]                  = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 3}, type = {"Action", "Doom"},           nonSupply = {"Wish"},                                                 sheet = {name = "", position = "00"} },
+    ["Night Watchman"]              = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 3}, type = {"Night"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Secret Cave"]                 = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 3}, type = {"Action", "Duration"},       nonSupply = {"Wish"},   heirloom = "Magic Lamp",                      sheet = {name = "", position = "00"} },
+    ["Bard"]                        = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action", "Fate"},                                                                                 sheet = {name = "", position = "00"} },
+    ["Blessed Village"]             = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action", "Fate"},                                                                                 sheet = {name = "", position = "00"} },
+    ["Cemetery"]                    = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Victory"},                  nonSupply = {"Ghost"},  heirloom = "Haunted Mirror", vp = 2,          sheet = {name = "", position = "00"} },
+    ["Conclave"]                    = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Devil's Workshop"]            = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Night"},                    nonSupply = {"Imp"},                                                  sheet = {name = "", position = "00"} },
+    ["Exorcist"]                    = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Night"},                    nonSupply = {"Will-o'-Wisp", "Imp", "Ghost"},                         sheet = {name = "", position = "00"} },
+    ["Necromancer"]                 = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                   extras = {["Zombies"] = true},                                              sheet = {name = "", position = "00"} },
+    ["Shepherd"]                    = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action"},                                         heirloom = "Pasture",                           sheet = {name = "", position = "00"} },
+    ["Skulk"]                       = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 4}, type = {"Action", "Attack", "Doom"},                                                                       sheet = {name = "", position = "00"} },
+    ["Cobbler"]                     = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Night", "Duration"},                                                                              sheet = {name = "", position = "00"} },
+    ["Crypt"]                       = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Night", "Duration"},                                                                              sheet = {name = "", position = "00"} },
+    ["Cursed Village"]              = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Doom"},                                                                                 sheet = {name = "", position = "00"} },
+    ["Den of Sin"]                  = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Night", "Duration"},                                                                              sheet = {name = "", position = "00"} },
+    ["Idol"]                        = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Treasure", "Attack", "Fate"},                                                                     sheet = {name = "", position = "00"} },
+    ["Pooka"]                       = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                         heirloom = "Cursed Gold",                       sheet = {name = "", position = "00"} },
+    ["Sacred Grove"]                = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Fate"},                                                                                 sheet = {name = "", position = "00"} },
+    ["Tormentor"]                   = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Attack", "Doom"}, nonSupply = {"Imp Pile"},                                             sheet = {name = "", position = "00"} },
+    ["Tragic Hero"]                 = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Vampire"]                     = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Night", "Attack", "Doom"},  nonSupply = {"Bat Pile"},                                             sheet = {name = "", position = "00"} },
+    ["Werewolf"]                    = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 5}, type = {"Action", "Night", "Attack", "Doom"},                                                              sheet = {name = "", position = "00"} },
+    ["Raider"]                      = { set = "Nocturne", class = {"Card", "Kingdom"},    cost = {Money = 6}, type = {"Night", "Duration", "Attack"},                                                                    sheet = {name = "", position = "00"} },
+    -- Heirlooms
+    ["Haunted Mirror"]              = { set = "Nocturne", class = {"Card", "Starter"},    cost = {Money = 0}, type = {"Treasure", "Heirloom"},                                                                           sheet = {name = "", position = "00"} },
+    ["Magic Lamp"]                  = { set = "Nocturne", class = {"Card", "Starter"},    cost = {Money = 0}, type = {"Treasure", "Heirloom"},                                                                           sheet = {name = "", position = "00"} },
+    ["Goat"]                        = { set = "Nocturne", class = {"Card", "Starter"},    cost = {Money = 2}, type = {"Treasure", "Heirloom"},                                                                           sheet = {name = "", position = "00"} },
+    ["Pasture"]                     = { set = "Nocturne", class = {"Card", "Starter"},    cost = {Money = 2}, type = {"Treasure", "Victory", "Heirloom"},                                                                sheet = {name = "", position = "00"},
+        score = function(deckLists, playerColor)
+            return deckLists[playerColor]["Estate"] or 0
+        end
+    },
+    ["Pouch"]                       = { set = "Nocturne", class = {"Card", "Starter"},    cost = {Money = 2}, type = {"Treasure", "Heirloom"},                                                                           sheet = {name = "", position = "00"} },
+    ["Cursed Gold"]                 = { set = "Nocturne", class = {"Card", "Starter"},    cost = {Money = 4}, type = {"Treasure", "Heirloom"},                                                                           sheet = {name = "", position = "00"} },
+    ["Lucky Coin"]                  = { set = "Nocturne", class = {"Card", "Starter"},    cost = {Money = 4}, type = {"Treasure", "Heirloom"},                                                                           sheet = {name = "", position = "00"} },
+    -- Non-supply
+    ["Will-o'-Wisp"]                = { set = "Nocturne", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Action", "Spirit"},                                                                               sheet = {name = "", position = "00"} },
+    ["Wish"]                        = { set = "Nocturne", class = {"Card", "Non-Supply"}, cost = {Money = 0}, type = {"Action"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Bat"]                         = { set = "Nocturne", class = {"Card", "Non-Supply"}, cost = {Money = 2}, type = {"Night"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Imp"]                         = { set = "Nocturne", class = {"Card", "Non-Supply"}, cost = {Money = 2}, type = {"Action", "Spirit"},                                                                               sheet = {name = "", position = "00"} },
+    ["Zombie Apprentice"]           = { set = "Nocturne", class = {"Card", "Non-Supply"}, cost = {Money = 3}, type = {"Action", "Zombie"},                                                                               sheet = {name = "", position = "00"} },
+    ["Zombie Mason"]                = { set = "Nocturne", class = {"Card", "Non-Supply"}, cost = {Money = 3}, type = {"Action", "Zombie"},                                                                               sheet = {name = "", position = "00"} },
+    ["Zombie Spy"]                  = { set = "Nocturne", class = {"Card", "Non-Supply"}, cost = {Money = 3}, type = {"Action", "Zombie"},                                                                               sheet = {name = "", position = "00"} },
+    ["Ghost"]                       = { set = "Nocturne", class = {"Card", "Non-Supply"}, cost = {Money = 4}, type = {"Night", "Duration", "Spirit"},                                                                    sheet = {name = "", position = "00"} },
+    -- Boons
+    ["The Earth's Gift"]            = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The Field's Gift"]            = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The Flame's Gift"]            = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The Forest's Gift"]           = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The Moon's Gift"]             = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The Mountain's Gift"]         = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The River's Gift"]            = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The Sea's Gift"]              = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The Sky's Gift"]              = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The Sun's Gift"]              = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    ["The Swamp's Gift"]            = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"}, nonSupply = {"Will-o'-Wisp Pile"},                                                        sheet = {name = "", position = "00"} },
+    ["The Wind's Gift"]             = { set = "Nocturne", class = {"Extra"},                                  type = {"Boon"},                                                                                           sheet = {name = "", position = "00"} },
+    -- Hexes
+    ["Bad Omens"]                   = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"},                                                                                            sheet = {name = "", position = "00"} },
+    ["Delusion"]                    = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"}, extras = {["States"] = "Envious / Deluded"},                                               sheet = {name = "", position = "00"} },
+    ["Envy"]                        = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"}, extras = {["States"] = "Envious / Deluded"},                                               sheet = {name = "", position = "00"} },
+    ["Famine"]                      = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"},                                                                                            sheet = {name = "", position = "00"} },
+    ["Fear"]                        = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"},                                                                                            sheet = {name = "", position = "00"} },
+    ["Greed"]                       = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"},                                                                                            sheet = {name = "", position = "00"} },
+    ["Haunting"]                    = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"},                                                                                            sheet = {name = "", position = "00"} },
+    ["Locusts"]                     = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"},                                                                                            sheet = {name = "", position = "00"} },
+    ["Misery"]                      = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"}, extras = {["States"] = "Miserable / Twice Miserable"},                                     sheet = {name = "", position = "00"} },
+    ["Plague"]                      = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"},                                                                                            sheet = {name = "", position = "00"} },
+    ["Poverty"]                     = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"},                                                                                            sheet = {name = "", position = "00"} },
+    ["War"]                         = { set = "Nocturne", class = {"Extra"},                                  type = {"Hex"},                                                                                            sheet = {name = "", position = "00"} },
+    -- States
+    ["Envious / Deluded"]           = { set = "Nocturne", class = {"Extra"},                                  type = {"State"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Miserable / Twice Miserable"] = { set = "Nocturne", class = {"Extra"},                                  type = {"State"},                                                                                          sheet = {name = "", position = "00"},
+        score = function(_, _, object)
+            if object.is_face_down then return -4 else return -2 end
+        end
+    },
+    ["Lost in the Woods"]           = { set = "Nocturne", class = {"Extra"},                                  type = {"State"},                                                                                          sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// RENAISSANCE
+    ["Border Guard"]     = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},                                          extras = {["Artifacts"] = {"Horn", "Lantern"}}, sheet = {name = "", position = "00"} },
+    ["Ducat"]            = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Treasure"},           matsAndTokens = {"Coffers"},                                                 sheet = {name = "", position = "00"} },
+    ["Lackeys"]          = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 2}, type = {"Action"},             matsAndTokens = {"Villagers"},                                               sheet = {name = "", position = "00"} },
+    ["Acting Troupe"]    = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},             matsAndTokens = {"Villagers"},                                               sheet = {name = "", position = "00"} },
+    ["Cargo Ship"]       = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action", "Duration"},                                                                              sheet = {name = "", position = "00"} },
+    ["Experiment"]       = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Improve"]          = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Flag Bearer"]      = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                          extras = {["Artifacts"] = "Flag"},              sheet = {name = "", position = "00"} },
+    ["Hideout"]          = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Inventor"]         = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Mountain Village"] = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Patron"]           = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Reaction"}, matsAndTokens = {"Coffers", "Villagers"},                                    sheet = {name = "", position = "00"} },
+    ["Priest"]           = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Research"]         = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action", "Duration"},                                                                              sheet = {name = "", position = "00"} },
+    ["Silk Merchant"]    = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},             matsAndTokens = {"Coffers", "Villagers"},                                    sheet = {name = "", position = "00"} },
+    ["Old Witch"]        = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"},                                                                                sheet = {name = "", position = "00"} },
+    ["Recruiter"]        = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},             matsAndTokens = {"Villagers"},                                               sheet = {name = "", position = "00"} },
+    ["Scepter"]          = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Treasure"},                                                                                        sheet = {name = "", position = "00"} },
+    ["Scholar"]          = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Sculptor"]         = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},             matsAndTokens = {"Villagers"},                                               sheet = {name = "", position = "00"} },
+    ["Seer"]             = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                                                                                          sheet = {name = "", position = "00"} },
+    ["Spices"]           = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Treasure"},           matsAndTokens = {"Coffers"},                                                 sheet = {name = "", position = "00"} },
+    ["Swashbuckler"]     = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},             matsAndTokens = {"Coffers"}, extras = {["Artifacts"] = "Treasure Chest"},    sheet = {name = "", position = "00"} },
+    ["Treasurer"]        = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                                          extras = {["Artifacts"] = "Key"},               sheet = {name = "", position = "00"} },
+    ["Villain"]          = { set = "Renaissance", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action", "Attack"},   matsAndTokens = {"Coffers"},                                                 sheet = {name = "", position = "00"} },
+    -- Artifacts
+    ["Flag"]             = { set = "Renaissance", class = {"Extra"},                               type = {"Artifact"},                                                                                        sheet = {name = "", position = "00"} },
+    ["Horn"]             = { set = "Renaissance", class = {"Extra"},                               type = {"Artifact"},                                                                                        sheet = {name = "", position = "00"} },
+    ["Key"]              = { set = "Renaissance", class = {"Extra"},                               type = {"Artifact"},                                                                                        sheet = {name = "", position = "00"} },
+    ["Lantern"]          = { set = "Renaissance", class = {"Extra"},                               type = {"Artifact"},                                                                                        sheet = {name = "", position = "00"} },
+    ["Treasure Chest"]   = { set = "Renaissance", class = {"Extra"},                               type = {"Artifact"},                                                                                        sheet = {name = "", position = "00"} },
+    -- Projects
+    ["Cathedral"]        = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 3}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["City Gate"]        = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 3}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Pageant"]          = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 3}, type = {"Project"},            matsAndTokens = {"Coffers"},                                                 sheet = {name = "", position = "00"} },
+    ["Sewers"]           = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 3}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Star Chart"]       = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 3}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Exploration"]      = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 4}, type = {"Project"},            matsAndTokens = {"Coffers", "Villagers"},                                    sheet = {name = "", position = "00"} },
+    ["Fair"]             = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 4}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Silos"]            = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 4}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Sinister Plot"]    = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 4}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Academy"]          = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 5}, type = {"Project"},            matsAndTokens = {"Villagers"},                                               sheet = {name = "", position = "00"} },
+    ["Capitalism"]       = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 5}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Fleet"]            = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 5}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Guildhall"]        = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 5}, type = {"Project"},            matsAndTokens = {"Coffers"},                                                 sheet = {name = "", position = "00"} },
+    ["Piazza"]           = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 5}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Road Network"]     = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 5}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Barracks"]         = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 6}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Crop Rotation"]    = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 6}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Innovation"]       = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 6}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Canal"]            = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 7}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    ["Citadel"]          = { set = "Renaissance", class = {"Sideways"},        cost = {Money = 8}, type = {"Project"},                                                                                         sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// MENAGERIE
+    ["Black Cat"]            = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 2},  type = {"Action", "Attack", "Reaction"},                                      sheet = {name = "", position = "00"} },
+    ["Sleigh"]               = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 2},  type = {"Action", "Reaction"},           nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Supplies"]             = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 2},  type = {"Treasure"},                     nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Camel Train"]          = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 3},  type = {"Action"},                       matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Goatherd"]             = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 3},  type = {"Action"},                                                            sheet = {name = "", position = "00"} },
+    ["Scrap"]                = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 3},  type = {"Action"},                       nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Sheepdog"]             = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 3},  type = {"Action", "Reaction"},                                                sheet = {name = "", position = "00"} },
+    ["Snowy Village"]        = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 3},  type = {"Action"},                                                            sheet = {name = "", position = "00"} },
+    ["Stockpile"]            = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 3},  type = {"Treasure"},                     matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Bounty Hunter"]        = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 4},  type = {"Action"},                       matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Cardinal"]             = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 4},  type = {"Action", "Attack"},             matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Cavalry"]              = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 4},  type = {"Action"},                       nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Groom"]                = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 4},  type = {"Action"},                       nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Hostelry"]             = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 4},  type = {"Action"},                       nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Village Green"]        = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 4},  type = {"Action", "Duration", "Reaction"},                                    sheet = {name = "", position = "00"} },
+    ["Barge"]                = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action", "Duration"},                                                sheet = {name = "", position = "00"} },
+    ["Coven"]                = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action", "Attack"},             matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Displace"]             = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action"},                       matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Falconer"]             = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action", "Reaction"},                                                sheet = {name = "", position = "00"} },
+    ["Gatekeeper"]           = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action", "Duration", "Attack"}, matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Hunting Lodge"]        = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action"},                                                            sheet = {name = "", position = "00"} },
+    ["Kiln"]                 = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action"},                                                            sheet = {name = "", position = "00"} },
+    ["Livery"]               = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action"},                       nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Mastermind"]           = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action", "Duration"},                                                sheet = {name = "", position = "00"} },
+    ["Paddock"]              = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action"},                       nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Sanctuary"]            = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action"},                       matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Fisherman"]            = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 5},  type = {"Action"},                                                            sheet = {name = "", position = "00"} },
+    ["Destrier"]             = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 6},  type = {"Action"},                                                            sheet = {name = "", position = "00"} },
+    ["Wayfarer"]             = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 6},  type = {"Action"},                                                            sheet = {name = "", position = "00"} },
+    ["Animal Fair"]          = { set = "Menagerie", class = {"Card", "Kingdom"},    cost = {Money = 7},  type = {"Action"},                                                            sheet = {name = "", position = "00"} },
+    -- Events
+    ["Delay"]                = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 0},  type = {"Event"},                        matsAndTokens = {"Set Aside Token"}, sheet = {name = "", position = "00"} },
+    ["Desperation"]          = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 0},  type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    ["Gamble"]               = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 2},  type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    ["Pursue"]               = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 2},  type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    ["Ride"]                 = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 2},  type = {"Event"},                        nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Toil"]                 = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 2},  type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    ["Enhance"]              = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 3},  type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    ["March"]                = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 3},  type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    ["Transport"]            = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 3},  type = {"Event"},                        matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Banish"]               = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 4},  type = {"Event"},                        matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Bargain"]              = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 4},  type = {"Event"},                        nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Invest"]               = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 4},  type = {"Event"},                        matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Seize the Day"]        = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 4},  type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    ["Commerce"]             = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 5},  type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    ["Demand"]               = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 5},  type = {"Event"},                        nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Stampede"]             = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 5},  type = {"Event"},                        nonSupply = {"Horse Pile"},          sheet = {name = "", position = "00"} },
+    ["Reap"]                 = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 7},  type = {"Event"},                        matsAndTokens = {"Set Aside Token"}, sheet = {name = "", position = "00"} },
+    ["Enclave"]              = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 8},  type = {"Event"},                        matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Alliance"]             = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 10}, type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    ["Populate"]             = { set = "Menagerie", class = {"Sideways"},           cost = {Money = 10}, type = {"Event"},                                                             sheet = {name = "", position = "00"} },
+    -- Ways
+    ["Way of the Butterfly"] = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Camel"]     = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                          matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    ["Way of the Chameleon"] = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Frog"]      = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Goat"]      = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Horse"]     = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Mole"]      = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Monkey"]    = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Mouse"]     = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Mule"]      = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Otter"]     = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Owl"]       = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Ox"]        = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Pig"]       = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Rat"]       = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Seal"]      = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Sheep"]     = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Squirrel"]  = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                                                               sheet = {name = "", position = "00"} },
+    ["Way of the Turtle"]    = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                          matsAndTokens = {"Set Aside Token"}, sheet = {name = "", position = "00"} },
+    ["Way of the Worm"]      = { set = "Menagerie", class = {"Sideways"},                                type = {"Way"},                          matsAndTokens = {"Exile Mat"},       sheet = {name = "", position = "00"} },
+    -- Non-supply Cards
+    ["Horse"]                = { set = "Menagerie", class = {"Card", "Non-Supply"}, cost = {Money = 3},  type = {"Action"},                                                            sheet = {name = "", position = "00"} },
+    --////////////////////////////////////////////////////////////////////////////////////////////////////////////////// PROMO CARDS
+    ["Black Market"]   = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action"}, matsAndTokens = {"Black Market Mat"}, sheet = {name = "", position = "00"} },
+    ["Church"]         = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 3}, type = {"Action", "Duration"},                           sheet = {name = "", position = "00"} },
+    ["Dismantle"]      = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                       sheet = {name = "", position = "00"} },
+    ["Envoy"]          = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                       sheet = {name = "", position = "00"} },
+    ["Sauna / Avanto"] = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"}, replacement = "Sauna / Avanto",       sheet = {name = "", position = "00"} },         -- split pile setup card
+    ["Sauna"]          = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                       sheet = {name = "", position = "00"} },
+    ["Avanto"]         = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                                       sheet = {name = "", position = "00"} },
+    ["Walled Village"] = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 4}, type = {"Action"},                                       sheet = {name = "", position = "00"} },
+    ["Governor"]       = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Action"},                                       sheet = {name = "", position = "00"} },
+    ["Stash"]          = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 5}, type = {"Treasure"},                                     sheet = {name = "", position = "00"} },
+    ["Captain"]        = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 6}, type = {"Action", "Duration"},                           sheet = {name = "", position = "00"} },
+    ["Prince"]         = { set = "Promo", class = {"Card", "Kingdom"}, cost = {Money = 8}, type = {"Action"}, matsAndTokens = {"Set Aside Token"},  sheet = {name = "", position = "00"} },
+    -- Events
+    ["Summon"]         = { set = "Promo", class = {"Sideways"},        cost = {Money = 5}, type = {"Event"},  matsAndTokens = {"Set Aside Token"},  sheet = {name = "", position = "00"} },
+}
+
+-- a list of functionality of different card attributes (heirloom, etc)
+CARD_ATTRIBUTES = {
+    cost = {
+        getDependencies = function(cardName, board, boardSettings)
+            if cards[cardName] and cards[cardName].cost then
+                -- add the Potions pile if this card costs potion
+                if cards[cardName].cost["Potion"] then
+                    board:AddBasicPile("Potions")
+                end
+
+                -- add debt tokens if this card costs debt
+                if cards[cardName].cost["Debt"] then
+                    board:AddMatOrToken("Debt")
+                end
+            end
+        end
+    },
+    heirloom = {
+        getDependencies = function(cardName, board, boardSettings)
+            if cards[cardName] and cards[cardName].heirloom and boardSettings.otherSettings["Use Heirloom"] ~= false then
+                board:AddStartingCard(cards[cardName].heirloom)
+            end
+        end
+    }
+}
+
+-- a list of attributes for different types of card (Gathering, Looter, Etc)
+types = {
+    ["Victory"] = {
+        getSupplyCount = function(name, board)
+            return ((board.boardSettings.playerCount or getSeatedPlayerCount()) <= 2 and 8) or 12
+        end
+    },
+    ["Looter"] = {
+        getDependencies = function(cardName, board, boardSettings)
+            -- looter needs to add Ruins
+            board:AddBasicPile("Ruins Pile")
+        end
+    },
+    ["Reserve"] = {
+        getDependencies = function(cardName, board, boardSettings)
+            board:AddMatOrToken("Tavern Mat")
+        end
+    },
+    ["Gathering"] = {
+        getDependencies = function(cardName, board, boardSettings)
+            board:AddMatOrToken("Victory Points")
+        end
+    },
+    ["Fate"] = {
+        getDependencies = function(cardName, board, boardSettings)
+            board:AddExtra("Boons", true)
+        end
+    },
+    ["Doom"] = {
+        getDependencies = function(cardName, board, boardSettings)
+            board:AddExtra("Hexes", true)
+        end
+    },
+    ["Project"] = {
+        getDependencies = function(cardName, board, boardSettings)
+            -- Project needs to add project tokens
+            board:AddMatOrToken("Owns Project Tokens")
+        end
+    }
+}
+
+-- a list of each expansion and what cards are included (as well as basic cards and other materials)
+sets = {                                                                                                                -- UNFINISHED
+    ["Dominion"] = {
+        kingdom = {
+            sheet = {
+                image = "http://cloud-3.steamusercontent.com/ugc/936063271535497820/245F2C7B6369FA193DE460A9CD68DCFA96F645A1/",
+                width = 10,
+                height = 3,
+                number = 26
+            },
+            "Cellar",
+            "Chapel",
+            "Moat",
+            "Harbinger",
+            "Merchant",
+            "Vassal",
+            "Village",
+            "Workshop",
+            "Bureaucrat",
+            "Gardens",
+            "Militia",
+            "Moneylender",
+            "Poacher",
+            "Remodel",
+            "Smithy",
+            "Throne Room",
+            "Bandit",
+            "Council Room",
+            "Festival",
+            "Laboratory",
+            "Library",
+            "Market",
+            "Mine",
+            "Sentry",
+            "Witch",
+            "Artisan"
+        }
+    },
+    ["Intrigue"] = {
+
+    },
+    ["Seaside"] = {
+
+    },
+    ["Alchemy"] = {
+
+    },
+    ["Prosperity"] = {
+
+    },
+    ["Cornucopia"] = {
+
+    },
+    ["Hinterlands"] = {
+
+    },
+    ["Dark Ages"] = {
+
+    },
+    ["Guilds"] = {
+
+    },
+    ["Adventures"] = {
+
+    },
+    ["Empires"] = {
+
+    },
+    ["Nocturne"] = {
+
+    },
+    ["Renaissance"] = {
+
+    },
+    ["Menagerie"] = {
+
+    },
+    ["Promo"] = {
+
+    },
+    ["Cut Dominion Cards"] = {
+
+    },
+    ["Cut Intrigue Cards"] = {
+
+    }
+}
+
+-- a table of what each replacement card replaces into and the zone the pile is in
+replacementPiles = {
+    --[[
+    ["_Template"] = {
+        -- what cards are part of the replacement pile
+        contents = {"foo", "bar"},
+        -- the guid of the zone and mat where the replacement pile is located
+        guids = {["Zone"] = "123456", ["Mat"] = "654321"}
+    }
+    --]]
+    ["Knights"] = {
+        contents = {"Dame Anna", "Dame Josephine", "Dame Molly", "Dame Natalie", "Dame Sylvia", "Sir Bailey", "Sir Destry", "Sir Martin", "Sir Michael", "Sir Vander"},
+        guids = {["Zone"] = "391e4e", ["Mat"] = "1c7b6c"},
+        setup = function(board, zone)
+            -- knights need to be shuffled
+            -- wait one frame
+            Wait.frames(function()
+                local deck = findDeck(zone)
+                if deck then
+                    deck.randomize()
+                end
+            end, 1)
+        end
+    },
+    ["Castles"] = {
+        contents = {"Humble Castle", "Crumbling Castle", "Small Castle", "Haunted Castle", "Opulent Castle", "Sprawling Castle", "Grand Castle", "King's Castle"},
+        guids = {["Zone"] = "f56b33", ["Mat"] = "6f8922"},
+        setup = function(board, zone)
+            -- extra castles need to be taken out
+            if board.boardSettings.playerCount <= 2 then
+            -- wait one frame
+                Wait.frames(function()
+                    local deck = findDeck(zone)
+                    if deck then
+                        for i, t in ipairs(deck.getObjects()) do
+                            if t.name == "Humble Castle" then
+                                safeTakeObject(deck, {index = i}).destruct()
+                                break
+                            end
+                        end
+                        for i, t in ipairs(deck.getObjects()) do
+                            if t.name == "Small Castle" then
+                                safeTakeObject(deck, {index = i}).destruct()
+                                break
+                            end
+                        end
+                        for i, t in ipairs(deck.getObjects()) do
+                            if t.name == "Opulent Castle" then
+                                safeTakeObject(deck, {index = i}).destruct()
+                                break
+                            end
+                        end
+                        for i, t in ipairs(deck.getObjects()) do
+                            if t.name == "King's Castle" then
+                                safeTakeObject(deck, {index = i}).destruct()
+                                break
+                            end
+                        end
+                    end
+                end, 1)
+            end
+        end
+    },
+    ["Encampment / Plunder"] = {
+        contents = {"Encampment", "Plunder"},
+        guids = {["Zone"] = "e89af9", ["Mat"] = "783b87"}
+    },
+    ["Patrician / Emporium"] = {
+        contents = {"Patrician", "Emporium"},
+        guids = {["Zone"] = "95024c", ["Mat"] = "26968f"}
+    },
+    ["Settlers / Bustling Village"] = {
+        contents = {"Settlers", "Bustling Village"},
+        guids = {["Zone"] = "ee72e8", ["Mat"] = "8096b3"}
+    },
+    ["Catapult / Rocks"] = {
+        contents = {"Catapult", "Rocks"},
+        guids = {["Zone"] = "6ffbbe", ["Mat"] = "59ebc4"}
+    },
+    ["Gladiator / Fortune"] = {
+        contents = {"Gladiator", "Fortune"},
+        guids = {["Zone"] = "3b00c5", ["Mat"] = "ecab0e"}
+    },
+    ["Sauna / Avanto"] = {
+        contents = {"Sauna", "Avanto"},
+        guids = {["Zone"] = "6d491a", ["Mat"] = "5e88e2"}
+    },
+}
+
+-- a table of general rules about how to game functions grouped by arbitrary groupings
+BOARD_RULES = {
+    -- rules about the basic piles (when to keep each and how many to use)
+    ["Basic"] = {
+        getDependencies = function(board, boardSettings)
+            -- add the seven basic piles that are always used
+            board:AddBasicPile("Coppers")
+            board:AddBasicPile("Silvers")
+            board:AddBasicPile("Golds")
+            board:AddBasicPile("Curses")
+            board:AddBasicPile("Estates")
+            board:AddBasicPile("Duchies")
+            board:AddBasicPile("Provinces")
+
+            -- Colony and Plat are added below
+            -- Potions are added based on cost
+            -- Ruins are added based on card types
+        end
+    },
+    ["Set Specific"] = {
+        getDependencies = function(board, boardSettings)
+            -- check the kingdom settings and see if plats or colonies need to be included
+            local usePlat = boardSettings.otherSettings["Use Plat"]
+            local useColonies = boardSettings.otherSettings["Use Colony"]
+            if usePlat == nil or useColonies == nil then
+                -- get a random randomizer card and see if its from prosperity
+                local cardName = boardSettings.kingdom[math.random(#boardSettings.kingdom)]
+                if cardName and cards[cardName] and cards[cardName].set == "Prosperity" then
+                    usePlat = (usePlat == nil and true) or usePlat
+                    useColonies = (useColonies == nil and true) or useColonies
+                end
+            end
+            if usePlat then board:AddBasicPile("Platinums") end
+            if useColonies then board:AddBasicPile("Colonies") end
+
+            -- add the shelters if they are needed
+            local useShelters = boardSettings.otherSettings["Use Shelters"]
+            if useShelters == nil then
+                -- get a random randomizer card and see if its from dark ages
+                local cardName = boardSettings.kingdom[math.random(#boardSettings.kingdom)]
+                if cardName and cards[cardName] and cards[cardName].set == "Dark Ages" then
+                    useShelters = true
+                end
+            end
+            if useShelters then
+                board:AddStartingCard("Overgrown Estate")
+                board:AddStartingCard("Necropolis")
+                board:AddStartingCard("Hovel")
+            end
+        end
+    }
+}

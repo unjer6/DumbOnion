@@ -1,0 +1,158 @@
+-- cleans up the play area and draws a new hand for the passing player
+function onPlayerTurn(player, previous_player)
+    -- if the game is being played and this isn't the first turn
+    if player and previous_player and previous_player.seated then
+        cleanup(previous_player.color)
+    end
+end
+
+-- performs auto cleanup for a given color
+function cleanup(color)
+    function cleanupCoroutine()
+        -- discard cards in the play area
+        discardPlayArea(color)
+        -- discard cards in hand
+        discardHand(color)
+        -- wait for the cards to settle first
+        for i=1, 75 do
+            coroutine.yield(0)
+        end
+        -- draw them a new hand
+        local amountToDraw = 5
+        drawAllCards(amountToDraw, color)
+
+        return 1
+    end
+
+    startLuaCoroutine(self, "cleanupCoroutine")
+end
+
+-- moves all cards in the play area into a target color's discard pile
+function discardPlayArea(color)
+    local objectsInZone = objects["Play Area Zone"].getObjects()
+    local discardPosition = objects.players[color].zones["Discard"].getPosition()
+
+    -- functions used to move cards from inside a deck
+    -- tests if this card should be moved to the discard
+    local shouldDiscard = function(name) return cards[name] == nil or cards[name].class == nil or hasValue(cards[name].class, "Card") end
+    -- moves the card to the discard it belongs to
+    local moveToDiscard = function(object, name, guid)
+        local position = (cards[name] and cards[name].discard and cards[name].discard()) or discardPosition
+        safeTakeObject(object, {
+            position = position,
+            rotation = vector(0, 180, 0),
+            guid = guid
+        })
+    end
+    -- takes the card out of the deck and puts it where the deck is
+    local moveOutOfDeck = function(object, guid)
+        safeTakeObject(object, {
+            position = object.getPosition(),
+            rotation = object.getRotation(),
+            guid = guid
+        })
+    end
+
+    for _, v in pairs(objectsInZone) do
+        if v.held_by_color == nil and v.locked == false then
+            if v.type == "Card" then
+                -- check if this card should be discarded
+                if shouldDiscard(v.getName()) then moveToDiscard(v, v.getName(), v.getGUID()) end
+            elseif v.type == "Deck" then
+                -- we need to loop through each card in the deck and see if it needs to be removed
+                for _, c in pairs(v.getObjects()) do
+                    -- first check if there is a remainder
+                    if v.remainder then
+                        if shouldDiscard(v.remainder.getName()) then moveToDiscard(v.remainder, v.remainder.getName(), v.remainder.getGUID()) end
+                        -- break for safety
+                        break
+                    end
+                    -- check if this card should be discarded
+                    if shouldDiscard(c.name) then moveToDiscard(v, c.name, c.guid) else moveOutOfDeck(v, c.guid) end
+                end
+            end
+        end
+    end
+end
+
+-- discards all cards in a color's hand to their discard
+function discardHand(color)
+    local objectsInHand = objects.players[color].zones["Hand"].getObjects()
+    local position = objects.players[color].zones["Discard"].getPosition()
+    local rotation = vector(0, 180, 0)
+
+    for _, v in pairs(objectsInHand) do
+        v.setRotation(rotation)
+        v.setPosition(position)
+    end
+end
+
+-- draws cards and shuffles discard until the given number of cards is drawn (or the cards run out)
+function drawAllCards(number, color)
+    function drawAllCardsCoroutine()
+        number = number - drawCards(number, color)
+        if number > 0 then
+            -- we didn't draw all the cards we needed to so shuffle the deck and try again
+            -- wait for the cards to get drawn
+            for i=1, 30 do
+                coroutine.yield(0)
+            end
+            -- shuffle the discard
+            shuffleDiscard(color)
+            -- wait
+            for i=1, 30 do
+                coroutine.yield(0)
+            end
+            -- draw the rest of the cards
+            drawCards(number, color)
+        end
+
+        return 1
+    end
+
+    startLuaCoroutine(self, "drawAllCardsCoroutine")
+end
+
+-- tries to draw a given number of cards for a player (doesn't shuffle)
+-- returns how many cards were successfully drawn
+function drawCards(number, color)
+    -- first find the player's deck
+    local deck = findDeck(objects.players[color].zones["Deck"])
+
+    if deck then
+        local quantity = (deck.type == "Deck" and deck.getQuantity()) or 1
+        deck.deal(number, color)
+        return quantity
+    end
+
+    return 0
+end
+
+-- shuffles a player's discard pile into their deck
+function shuffleDiscard(color)
+    local deck = findDeck(objects.players[color].zones["Deck"])
+    local discard = findDeck(objects.players[color].zones["Discard"])
+    local target = objects.players[color].zones["Deck"].getPosition()
+
+    if discard then
+        if deck and deck.type == "Deck" then
+            -- if there is a deck then put the discard into it
+            local newDeck = deck.putObject(discard)
+            deck = newDeck or deck      -- putObject can fail and return nil if someone is searching the container
+        elseif deck and deck.type == "Card" then
+            -- if there is just one card in the deck then put it in the discard and flip the discard over
+            -- move the discard first to avoid a weird graphical bug
+            discard.setRotation(vector(0, 180, 180))    -- set face down
+            discard.setPosition(target)
+            local newDeck = discard.putObject(deck)
+            deck = newDeck or deck      -- putObject can fail and return nil if someone is searching the container
+        else
+            -- if there's no deck then flip the discard over
+            discard.setRotation(vector(0, 180, 180))    -- set face down
+            discard.setPosition(target)
+            deck = discard
+        end
+    end
+    -- finally shuffle
+    if deck then deck.randomize() end
+end

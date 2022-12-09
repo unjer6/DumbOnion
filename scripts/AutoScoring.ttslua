@@ -1,0 +1,185 @@
+-- initiates end of game cleanup and scoring
+function endGame()
+    function endGameCoroutine()
+        -- gather all cards in play area to whoever's turn it is
+        if Turns.turn_color and objects.players[Turns.turn_color] then
+            discardPlayArea(Turns.turn_color)
+        end
+        -- discard all player's hands
+        for k in pairs(objects.players) do
+            discardHand(k)
+        end
+        -- wait for the cards to settle first
+        for i=1, 75 do
+            coroutine.yield(0)
+        end
+
+        -- generate all player's decklists based on what cards are in their play mat
+        local deckLists = {}
+        for k, p in pairs(objects.players) do
+            deckLists[k] = generateDeckList(p.zones["Player Mat"])
+        end
+        -- score all cards where they are
+        local scores = {}
+        for _, color in ipairs(players) do
+            scores[color] = calculateScore(deckLists, color)
+        end
+        -- also score the sideways cards
+        for _, color in ipairs(players) do
+            for _, zone in ipairs(objects.supply.eventZones) do
+                local sideways = findDeck(zone)
+                if cards[sideways.getName()] and cards[sideways.getName()].score then
+                    scores[color] = scores[color] + cards[sideways.getName()].score(deckLists, color, sideways)
+                end
+            end
+        end
+
+        -- gather all cards in player mats and hands to their decks
+        for _, p in pairs(objects.players) do
+            local deck = group(getAllCardsInZone(p.zones["Player Mat"]))[1]
+            if deck then
+                deck.setRotation(vector(0, 180, 180))
+                deck.setPosition(p.zones["Deck"].getPosition())
+            end
+        end
+        -- wait for the cards to settle first
+        for i=1, 40 do
+            coroutine.yield(0)
+        end
+
+        -- spread out each player's victory cards
+        for k, p in pairs(objects.players) do
+            -- only spread out cards if that player is seated
+            if Player[k].seated then
+                spreadVictoryCards(k)
+            end
+        end
+
+        -- display scores
+        for k in pairs(objects.players) do
+            -- only display if that color is seated
+            if Player[k].seated then
+                printToAll(k .. " scored " .. scores[k] .. " points.")
+            end
+        end
+
+        -- turn off turns
+        Turns.enable = false
+
+        return 1
+    end
+
+    startLuaCoroutine(self, "endGameCoroutine")
+
+    save.buttons[guids["Button Zone"]]["End Game"] = nil
+    updateButtons()
+end
+
+-- returns a table as a deck list of all cards in a zone
+function generateDeckList(zone)
+    local objectsInZone = zone.getObjects()
+    local list = {}
+
+    for _, o in pairs(objectsInZone) do
+        if o.type == "Card" then
+            list[o.getName()] = (list[o.getName()] and list[o.getName()] + 1) or 1
+        elseif o.type == "Deck" then
+            local cardsInDeck = o.getObjects()
+            for _, c in pairs(cardsInDeck) do
+                list[c.name] = (list[c.name] and list[c.name] + 1) or 1
+            end
+        end
+    end
+
+    return list
+end
+
+-- returns the score calculated (scores card in the player mat)
+-- player - the player color to be scored
+function calculateScore(deckLists, playerColor)
+    local scoreTotal = 0
+    local objectsInZone = objects.players[playerColor].zones["Player Mat"].getObjects()
+
+    local scoreCard = function(name, deckLists, playerColor, obj)
+        local total = 0
+        if cards[name] then
+            if cards[name].score then
+                total = total + cards[name].score(deckLists, playerColor, obj)
+            elseif cards[name].vp then
+                total = total + cards[name].vp
+            end
+        end
+        return total
+    end
+
+    for _, o in pairs(objectsInZone) do
+        if o.type == "Card" then
+            scoreTotal = scoreTotal + scoreCard(o.getName(), deckLists, playerColor, o)
+        elseif o.type == "Deck" then
+            local cardsInDeck = o.getObjects()
+            for _, c in pairs(cardsInDeck) do
+                scoreTotal = scoreTotal + scoreCard(c.name, deckLists, playerColor, o)
+            end
+        end
+    end
+
+    -- also add the victory point tokens
+    local vp = (objects.players[playerColor].tokens["Victory Points"] and objects.players[playerColor].tokens["Victory Points"].value) or 0
+    scoreTotal = scoreTotal + vp
+
+    return scoreTotal
+end
+
+-- spreads out the victory cards found in target player color's deck
+function spreadVictoryCards(color)
+    local deck = findDeck(objects.players[color].zones["Deck"])
+    if deck == nil then return end
+    -- keeps track of how many cards of each name have been spread out so far
+    local cardsSpread = {}
+    -- position of the 0, 0 position (offset is hard coded for now)
+    local topRightPos = vector(deck.getPosition().x - 5.5, deck.getPosition().y, deck.getPosition().z + 28.5)
+    local horzSpread = 1.2      -- distance along x each card in one group is moved
+    local vertSpread = -2       -- distance along z each card between groups is moved
+    local yDiff = 0.2           -- y buffer between groups so they layer properly
+
+    -- functions used to handle cards
+    local shouldMove = function(name) return cards[name] and hasValueTable(cards[name].type, {"Victory", "Curse"}) end
+    -- moves object to correct positon based on how many cards with the same name we have found so far
+    local move = function(object, name, guid)
+        if cardsSpread[name] == nil then
+            cardsSpread[name] = {
+                group = getCount(cardsSpread),
+                amount = 0
+            }
+        end
+        local offset = vector(
+            horzSpread * cardsSpread[name].amount,
+            (yDiff * cardsSpread[name].group) + ((yDiff / 3) * cardsSpread[name].amount),
+            vertSpread * cardsSpread[name].group
+        )
+        safeTakeObject(object, {
+            position = topRightPos + offset,
+            rotation = vector(0, 180, 0),
+            guid = guid
+        })
+        cardsSpread[name].amount = cardsSpread[name].amount + 1
+    end
+
+    -- check the case where there is just a single card in the player's deck
+    if deck.type == "Card" then
+        if shouldMove(deck.getName()) then move(deck, deck.getName(), deck.guid) end
+        return
+    end
+
+    -- the deck is a deck of cards
+    -- go through each card in their deck and move them
+    for _, v in pairs(deck.getObjects()) do
+        if deck.remainder then
+            if shouldMove(deck.remainder.getName()) then move(deck.remainder, deck.remainder.getName(), deck.remainder.guid) end
+            -- break for safety
+            break
+        end
+
+        if shouldMove(v.name) then move(deck, v.name, v.guid) end
+    end
+end

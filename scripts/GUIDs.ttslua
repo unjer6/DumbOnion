@@ -1,0 +1,1117 @@
+-- a list of every useful guid
+-- gets converted into object references inside onLoad and stored into objects
+guids = {
+    -- objects used by and in front of each player
+    players = {
+        Pink = {
+            tokens = {
+                ["Victory Points"]  = "1a8a90",
+                ["Coffers"]         = "4c451c",
+                ["Debt"]            = "2ba471",
+                ["Villagers"]       = "89f6fb",
+                ["Pirate Coins"]    = "07ec19",
+                ["-1 Card Token"]   = "2f4572",
+                ["-1 Coin Token"]   = "b56d40",
+                ["-2 Cost Token"]   = "dd4db1",
+                ["Trashing Token"]  = "ef949d",
+                ["Estate Token"]    = "1a0ffd",
+                ["Journey Token"]   = "6be8c5",
+                ["+1 Card Token"]   = "c8b5e2",
+                ["+1 Action Token"] = "96e1ef",
+                ["+1 Coin Token"]   = "7b25b3",
+                ["+1 Buy Token"]    = "8c6b69",
+                ["Owns Project"]    = { "f89471", "e1aa16" },   -- top then bottom token
+                ["Set Aside"]       = "18fe35"
+            },
+            mats = {
+                ["Exile Mat"]          = "8c43c7",
+                ["Tavern Mat"]         = "73b44f",
+                ["Native Village Mat"] = "3f337f",
+                ["Island Mat"]         = "1f1d47",
+                ["Deck"]               = "dc840a",
+                ["Discard"]            = "806f43",
+                ["Player Mat"]         = "82d604"
+            },
+            zones = {
+                ["Deck"]       = "161880",
+                ["Discard"]    = "eca8c0",
+                ["Tavern Mat"] = "b742a1",
+                ["Player Mat"] = "66d256",
+                ["Hand"]       = "f1cdee"
+            }
+        },
+        Green = {
+            tokens = {
+                ["Victory Points"]  = "318b12",
+                ["Coffers"]         = "1a8770",
+                ["Debt"]            = "048389",
+                ["Villagers"]       = "5134b3",
+                ["Pirate Coins"]    = "4de60b",
+                ["-1 Card Token"]   = "5c4411",
+                ["-1 Coin Token"]   = "f27cdd",
+                ["-2 Cost Token"]   = "2e7fb1",
+                ["Trashing Token"]  = "0a3d69",
+                ["Estate Token"]    = "ed137a",
+                ["Journey Token"]   = "c77f32",
+                ["+1 Card Token"]   = "e53945",
+                ["+1 Action Token"] = "b6993b",
+                ["+1 Coin Token"]   = "322915",
+                ["+1 Buy Token"]    = "d683bf",
+                ["Owns Project"]    = { "753f52", "53d51a" },   -- top then bottom token
+                ["Set Aside"]       = "bfdd72"
+            },
+            mats = {
+                ["Exile Mat"]          = "41ff7f",
+                ["Tavern Mat"]         = "0c3771",
+                ["Native Village Mat"] = "2fa2e2",
+                ["Island Mat"]         = "a58748",
+                ["Deck"]               = "996e9f",
+                ["Discard"]            = "b6f3bc",
+                ["Player Mat"]         = "10b5cc"
+            },
+            zones = {
+                ["Deck"]       = "3e5cfc",
+                ["Discard"]    = "44c6e3",
+                ["Tavern Mat"] = "e53225",
+                ["Player Mat"] = "875144",
+                ["Hand"]       = "8774ef"
+            }
+        },
+        White = {
+            tokens = {
+                ["Victory Points"]  = "fd9212",
+                ["Coffers"]         = "f6bff9",
+                ["Debt"]            = "a5991e",
+                ["Villagers"]       = "71247d",
+                ["Pirate Coins"]    = "31e422",
+                ["-1 Card Token"]   = "c805b3",
+                ["-1 Coin Token"]   = "60da3b",
+                ["-2 Cost Token"]   = "b1f09d",
+                ["Trashing Token"]  = "65caf8",
+                ["Estate Token"]    = "a4e501",
+                ["Journey Token"]   = "467620",
+                ["+1 Card Token"]   = "9afa9c",
+                ["+1 Action Token"] = "99e974",
+                ["+1 Coin Token"]   = "f5ffde",
+                ["+1 Buy Token"]    = "11b9ad",
+                ["Owns Project"]    = { "7056a3", "d3baa9" },   -- top then bottom token
+                ["Set Aside"]       = "4d4d24"
+            },
+            mats = {
+                ["Exile Mat"]          = "b84b53",
+                ["Tavern Mat"]         = "4caf71",
+                ["Native Village Mat"] = "fd4653",
+                ["Island Mat"]         = "cae961",
+                ["Deck"]               = "e4c378",
+                ["Discard"]            = "c50c38",
+                ["Player Mat"]         = "f20217"
+            },
+            zones = {
+                ["Deck"]       = "f2146c",
+                ["Discard"]    = "b48e02",
+                ["Tavern Mat"] = "50c9ee",
+                ["Player Mat"] = "be0568",
+                ["Hand"]       = "6d780e"
+            }
+        },
+        Red = {
+            tokens = {
+                ["Victory Points"]  = "a5bdfe",
+                ["Coffers"]         = "a838ad",
+                ["Debt"]            = "13cb98",
+                ["Villagers"]       = "9ab08c",
+                ["Pirate Coins"]    = "d114f5",
+                ["-1 Card Token"]   = "01d25d",
+                ["-1 Coin Token"]   = "ec3692",
+                ["-2 Cost Token"]   = "2ccfa3",
+                ["Trashing Token"]  = "e4ac77",
+                ["Estate Token"]    = "2e6a7f",
+                ["Journey Token"]   = "65676a",
+                ["+1 Card Token"]   = "025ab0",
+                ["+1 Action Token"] = "90b742",
+                ["+1 Coin Token"]   = "cb6417",
+                ["+1 Buy Token"]    = "1621d1",
+                ["Owns Project"]    = { "b7dc65", "081686" },   -- top then bottom token
+                ["Set Aside"]       = "65bcd7"
+            },
+            mats = {
+                ["Exile Mat"]          = "c175d2",
+                ["Tavern Mat"]         = "3932e5",
+                ["Native Village Mat"] = "8d8bb1",
+                ["Island Mat"]         = "47484f",
+                ["Deck"]               = "53b5fb",
+                ["Discard"]            = "bb969d",
+                ["Player Mat"]         = "2fa48d"
+            },
+            zones = {
+                ["Deck"]       = "5eca2b",
+                ["Discard"]    = "16c9ce",
+                ["Tavern Mat"] = "f1a05f",
+                ["Player Mat"] = "089ee2",
+                ["Hand"]       = "13c587"
+            }
+        },
+        Blue = {
+            tokens = {
+                ["Victory Points"]  = "460fc7",
+                ["Coffers"]         = "f9b793",
+                ["Debt"]            = "359c7d",
+                ["Villagers"]       = "9164ca",
+                ["Pirate Coins"]    = "6a1b94",
+                ["-1 Card Token"]   = "bd7bd7",
+                ["-1 Coin Token"]   = "d7c452",
+                ["-2 Cost Token"]   = "e29300",
+                ["Trashing Token"]  = "af8ff3",
+                ["Estate Token"]    = "4b9e5b",
+                ["Journey Token"]   = "14f400",
+                ["+1 Card Token"]   = "6b586f",
+                ["+1 Action Token"] = "5959d0",
+                ["+1 Coin Token"]   = "28e8f5",
+                ["+1 Buy Token"]    = "04fed4",
+                ["Owns Project"]    = { "356ba6", "fa4179" },   -- top then bottom token
+                ["Set Aside"]       = "461fcf"
+            },
+            mats = {
+                ["Exile Mat"]          = "b2c72e",
+                ["Tavern Mat"]         = "76e257",
+                ["Native Village Mat"] = "62814d",
+                ["Island Mat"]         = "f42e05",
+                ["Deck"]               = "a044b0",
+                ["Discard"]            = "d90a4d",
+                ["Player Mat"]         = "a2a688"
+            },
+            zones = {
+                ["Deck"]       = "dde784",
+                ["Discard"]    = "34fc95",
+                ["Tavern Mat"] = "dca674",
+                ["Player Mat"] = "8313c1",
+                ["Hand"]       = "6f479c"
+            }
+        },
+        Yellow = {
+            tokens = {
+                ["Victory Points"]  = "48c7fe",
+                ["Coffers"]         = "0f2f7e",
+                ["Debt"]            = "d26450",
+                ["Villagers"]       = "e9311d",
+                ["Pirate Coins"]    = "f39723",
+                ["-1 Card Token"]   = "ffca2f",
+                ["-1 Coin Token"]   = "d866a0",
+                ["-2 Cost Token"]   = "85112e",
+                ["Trashing Token"]  = "4fac52",
+                ["Estate Token"]    = "78b646",
+                ["Journey Token"]   = "79f6b5",
+                ["+1 Card Token"]   = "ce8a91",
+                ["+1 Action Token"] = "3d3cd3",
+                ["+1 Coin Token"]   = "060245",
+                ["+1 Buy Token"]    = "20603e",
+                ["Owns Project"]    = { "e891e5", "13557d" },   -- top then bottom token
+                ["Set Aside"]       = "593fbd"
+            },
+            mats = {
+                ["Exile Mat"]          = "6bab0a",
+                ["Tavern Mat"]         = "38103f",
+                ["Native Village Mat"] = "52a2e8",
+                ["Island Mat"]         = "5c7e33",
+                ["Deck"]               = "cda6b9",
+                ["Discard"]            = "d223fd",
+                ["Player Mat"]         = "eae7df"
+            },
+            zones = {
+                ["Deck"]       = "1fed5b",
+                ["Discard"]    = "7916e6",
+                ["Tavern Mat"] = "e57747",
+                ["Player Mat"] = "37eaed",
+                ["Hand"]       = "62384f"
+            }
+        }
+    },
+    -- all piles, mats, and zones that make up the supply
+    supply = {
+        basicPiles = {
+            ["Potion"]   = "475de7",
+            ["Copper"]   = "3a738e",
+            ["Silver"]   = "a655a3",
+            ["Gold"]     = "b11add",
+            ["Platinum"] = "85fcca",
+            ["Curse"]    = "d9a2c0",
+            ["Estate"]   = "4d0b0e",
+            ["Duchy"]    = "d253c8",
+            ["Province"] = "4a8334",
+            ["Colony"]   = "6ce695",
+            ["Ruins"]    = "2adf43"
+        },
+        basicPileMats = {
+            ["Potion"]   = "4f1bdf",
+            ["Copper"]   = "b53849",
+            ["Silver"]   = "1e6bc9",
+            ["Gold"]     = "1a390b",
+            ["Platinum"] = "9a7cde",
+            ["Curse"]    = "2b624e",
+            ["Estate"]   = "fc44d0",
+            ["Duchy"]    = "c80e6c",
+            ["Province"] = "46e094",
+            ["Colony"]   = "f22317",
+            ["Ruins"]    = "624106"
+        },
+        basicPileZones = {
+            ["Potion"]   = "772aa2",
+            ["Copper"]   = "99c438",
+            ["Silver"]   = "fa1a9e",
+            ["Gold"]     = "82989a",
+            ["Platinum"] = "3ed99d",
+            ["Curse"]    = "6555c4",
+            ["Estate"]   = "3c7d82",
+            ["Duchy"]    = "abbc0e",
+            ["Province"] = "16a085",
+            ["Colony"]   = "4e8983",
+            ["Ruins"]    = "e7b423"
+        },
+        kingdomMats = {
+            -- from left to right and then top to bottom
+            "cce6c6",
+            "f6f74b",
+            "c5c45f",
+            "66771c",
+            "a83f0c",
+            "aea721",
+            "6eaafe",
+            "acddb6",
+            "e7d6f7",
+            "691cca"
+        },
+        kingdomZones = {
+            -- from left to right and then top to bottom
+            "3d368b",
+            "21f484",
+            "302acc",
+            "0e683e",
+            "1b15fb",
+            "e5281c",
+            "378a2a",
+            "395cf8",
+            "ec5547",
+            "756903"
+        },
+        eventMats = {
+            -- from left to right
+            "bd3de5",
+            "7dea91",
+            "0deb11",
+            "b0a32d"
+        },
+        eventZones = {
+            -- from left to right
+            "571c8c",
+            "817e2f",
+            "7657a3",
+            "f39ca2"
+        },
+        -- all other mats used inside the supply
+        otherMats = {
+            ["Bane Mat"]         = {"df4a68", "9c5a7e"},
+            ["Trash Mat"]        = "b282fd",
+            ["Black Market Mat"] = {"b60e21", "031a4d", "668dbc"},
+            ["Trade Route Mat"]  = "b853e8"
+        }
+    },
+    -- all cards on white non-supply mats plus the zombies pile and the mats themselves
+    nonSupply = {
+        piles = {
+            ["Madman"]          = "aad690",
+            ["Mercenary"]       = "268698",
+            ["Spoils"]          = "a28f37",
+            ["Will-o'-Wisp"]    = "6b95ed",
+            ["Imp"]             = "f03f23",
+            ["Ghost"]           = "b1c514",
+            ["Treasure Hunter"] = "fe074f",
+            ["Warrior"]         = "28295b",
+            ["Hero"]            = "6d6378",
+            ["Champion"]        = "8a1c6a",
+            ["Wish"]            = "c1d9e5",
+            ["Bat"]             = "dc4a0b",
+            ["Soldier"]         = "59ed88",
+            ["Fugitive"]        = "3820bb",
+            ["Disciple"]        = "a0f20e",
+            ["Teacher"]         = "7fe8ec",
+            ["Prizes"]          = "9f140e",
+            ["Horse"]           = "12ec27",
+            ["Zombies"]         = "5b95aa"
+        },
+        mats = {
+            ["Madman"]          = "a3a3f8",
+            ["Mercenary"]       = "264d5e",
+            ["Spoils"]          = "dedd90",
+            ["Will-o'-Wisp"]    = "be1e86",
+            ["Imp"]             = "bef3f2",
+            ["Ghost"]           = "0739ed",
+            ["Treasure Hunter"] = "3f3675",
+            ["Warrior"]         = "58b157",
+            ["Hero"]            = "7ff05c",
+            ["Champion"]        = "ac9988",
+            ["Wish"]            = "76feaf",
+            ["Bat"]             = "3734fb",
+            ["Soldier"]         = "fb8b29",
+            ["Fugitive"]        = "dd9c06",
+            ["Disciple"]        = "fb3a5a",
+            ["Teacher"]         = "ddd6fe",
+            ["Prizes"]          = "d5887b",
+            ["Horse"]           = "b470be"
+        },
+        zones = {
+            ["Madman"]          = "89dca4",
+            ["Mercenary"]       = "9f282c",
+            ["Spoils"]          = "c4d056",
+            ["Will-o'-Wisp"]    = "8f8ba1",
+            ["Imp"]             = "c5c39f",
+            ["Ghost"]           = "eb4c31",
+            ["Treasure Hunter"] = "07341c",
+            ["Warrior"]         = "ce4c41",
+            ["Hero"]            = "d1e459",
+            ["Champion"]        = "1ee432",
+            ["Wish"]            = "0fe09c",
+            ["Bat"]             = "141a3f",
+            ["Soldier"]         = "fb602d",
+            ["Fugitive"]        = "1f6b93",
+            ["Disciple"]        = "573b4a",
+            ["Teacher"]         = "af118c",
+            ["Prizes"]          = "29daf7",
+            ["Horse"]           = "82ca0b"
+        }
+    },
+    -- all piles that make up the expansions as well as event-likes and shelters / heirlooms
+    expansions = {
+        piles = {
+            ["Dominion"]             = "33d038",
+            ["Intrigue"]             = "a2a4c8",
+            ["Seaside"]              = "16e3aa",
+            ["Alchemy"]              = "f45629",
+            ["Prosperity"]           = "a8fee3",
+            ["Cornucopia"]           = "a70b3a",
+            ["Hinterlands"]          = "223a08",
+            ["Dark Ages"]            = "7e0f43",
+            ["Guilds"]               = "3c269b",
+            ["Adventures"]           = "7de6ab",
+            ["Empires"]              = "8c2b6f",
+            ["Nocturne"]             = "53ccb6",
+            ["Renaissance"]          = "042073",
+            ["Menagerie"]            = "056dde",
+            ["Promos"]               = "d62401",
+            ["Cut Dominion Cards"]   = "98d602",
+            ["Cut Intrigue Cards"]   = "192245",
+            ["Adventures Events"]    = "21a279",
+            ["Empires Events"]       = "54927b",
+            ["Empires Landmarks"]    = "843ff5",
+            ["Renaissance Projects"] = "b79f00",
+            ["Menagerie Events"]     = "018790",
+            ["Menagerie Ways"]       = "ef8beb",
+            ["Summon"]               = "dd9be5",
+            ["Shelters"]             = "915142",
+            ["Heirlooms"]            = "bfcd97"
+        },
+        mats = {
+            ["Dominion"]             = "b84143",
+            ["Intrigue"]             = "b3cd66",
+            ["Seaside"]              = "719f72",
+            ["Alchemy"]              = "b35d65",
+            ["Prosperity"]           = "915c19",
+            ["Cornucopia"]           = "11eac7",
+            ["Hinterlands"]          = "73a2f9",
+            ["Dark Ages"]            = "868360",
+            ["Guilds"]               = "39fb89",
+            ["Adventures"]           = "ce734e",
+            ["Empires"]              = "b14a18",
+            ["Nocturne"]             = "578a67",
+            ["Renaissance"]          = "7e1446",
+            ["Menagerie"]            = "479036",
+            ["Promos"]               = "262ad2",
+            ["Cut Dominion Cards"]   = "2b0860",
+            ["Cut Intrigue Cards"]   = "efa21e",
+            ["Adventures Events"]    = "e2b84b",
+            ["Empires Events"]       = "64cada",
+            ["Empires Landmarks"]    = "53cc98",
+            ["Renaissance Projects"] = "1d52e4",
+            ["Menagerie Events"]     = "2564e9",
+            ["Menagerie Ways"]       = "e8e6a7",
+            ["Summon"]               = "8d7200",
+            ["Shelters"]             = "e5fb3b",
+            ["Heirlooms"]            = "88ffee"
+        }
+    },
+    -- all special piles that are used to replace a setup card
+    replacementPiles = {
+        piles = {
+            ["Knights"]                     = "2c40f7",
+            ["Encampment / Plunder"]        = "80ffa8",
+            ["Patrician / Emporium"]        = "2261c6",
+            ["Settlers / Bustling Village"] = "4dc1ff",
+            ["Castles"]                     = "7b9cc0",
+            ["Catapult / Rocks"]            = "eb45b9",
+            ["Gladiator / Fortune"]         = "65a365",
+            ["Sauna / Avanto"]              = "3c7eb3"
+        },
+        mats = {
+            ["Knights"]                     = "1c7b6c",
+            ["Encampment / Plunder"]        = "783b87",
+            ["Patrician / Emporium"]        = "26968f",
+            ["Settlers / Bustling Village"] = "8096b3",
+            ["Castles"]                     = "6f8922",
+            ["Catapult / Rocks"]            = "59ebc4",
+            ["Gladiator / Fortune"]         = "ecab0e",
+            ["Sauna / Avanto"]              = "5e88e2"
+        }
+    },
+    -- all other materials used to play the game (boons, hexes, states, embargo tokens, etc)
+    other = {
+        piles = {
+            ["Boons"] = "b813c4",
+            ["Hexes"] = "0dc1b8",
+            ["Artifacts"] = "225220",
+            ["States"] = "ca6964",
+            ["Embargo Tokens"] = "7c2165"       -- added in piles for simplicity
+        },
+        mats = {
+            ["Boons"] = { "859ea1", "486bcb" }, -- deck mat then discard mat
+            ["Hexes"] = { "ad947d", "b37648" },
+            ["Artifacts"] = "9c974f",
+            ["States"] = "5e43cc"
+        }
+    },
+    ["Randomizer Deck Mat"] = "e9084b",
+    ["Randomizer Deck Zone"] = "95a9d3",
+    ["Randomizer Discard Mat"] = "148c0f",
+    ["Randomizer Discard Zone"] = "268abf",
+    ["Play Area Mat"]  = "008a72",
+    ["Play Area Zone"] = "87f6d0",
+    -- the zone used to display global buttons
+    ["Button Zone"]    = "6ca3bf"
+}
+
+-- on load is set to a copy of guids but the values are the result of using getObjectFromGUID
+objects = {
+    -- ["Template Group"] = {
+    --     ["Identifier"] = getObjectFromGUID("123456")
+    -- }
+}
+
+-- a table of every kingdom zone and mat
+kingdomPiles = {
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "3d368b", ["Mat"] = "cce6c6"}
+    },
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "21f484", ["Mat"] = "f6f74b"}
+    },
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "302acc", ["Mat"] = "c5c45f"}
+    },
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "0e683e", ["Mat"] = "66771c"}
+    },
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "1b15fb", ["Mat"] = "a83f0c"}
+    },
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "e5281c", ["Mat"] = "aea721"}
+    },
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "378a2a", ["Mat"] = "6eaafe"}
+    },
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "395cf8", ["Mat"] = "acddb6"}
+    },
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "ec5547", ["Mat"] = "e7d6f7"}
+    },
+    {
+        dontDestroy = true,
+        guids = {["Zone"] = "756903", ["Mat"] = "691cca"}
+    },
+    ["Bane"] = {
+        guids = {["Zone"] = "9c5a7e", ["Mat"] = "df4a68"}
+    }
+}
+
+-- a table of every sideways zone and mat
+sidewaysPiles = {
+
+}
+
+-- a table of what each basic pile contains as well as the zone the pile is in and functionality
+basicPiles = {
+    ["Potions"] = {
+        contents = {"Potion"},
+        guids = {["Zone"] = "772aa2", ["Mat"] = "4f1bdf"}
+    },
+    ["Coppers"] = {
+        contents = {"Copper"},
+        guids = {["Zone"] = "3ed99d", ["Mat"] = "9a7cde"},
+        setup = function(board)
+            local zone = getObjectFromGUID(basicPiles["Coppers"].guids["Zone"])
+            if not zone then
+                printToAll("No Zone found for Coppers.", Color.Yellow)
+            else
+                local deck = findDeck(zone)
+                if deck then
+                    setDeckSize(deck, (((board.boardSettings.playerCount or getSeatedPlayerCount()) <= 4 and 60) or 120) - 7 * (board.boardSettings.playerCount or getSeatedPlayerCount()))
+                end
+            end
+        end
+    },
+    ["Silvers"] = {
+        contents = {"Silver"},
+        guids = {["Zone"] = "82989a", ["Mat"] = "1a390b"},
+        setup = function(board)
+            local zone = getObjectFromGUID(basicPiles["Silvers"].guids["Zone"])
+            if not zone then
+                printToAll("No Zone found for Silvers.", Color.Yellow)
+            else
+                local deck = findDeck(zone)
+                if deck then
+                    setDeckSize(deck, ((board.boardSettings.playerCount or getSeatedPlayerCount()) <= 4 and 40) or 80)
+                end
+            end
+        end
+    },
+    ["Golds"] = {
+        contents = {"Gold"},
+        guids = {["Zone"] = "fa1a9e", ["Mat"] = "1e6bc9"},
+        setup = function(board)
+            local zone = getObjectFromGUID(basicPiles["Golds"].guids["Zone"])
+            if not zone then
+                printToAll("No Zone found for Golds.", Color.Yellow)
+            else
+                local deck = findDeck(zone)
+                if deck then
+                    setDeckSize(deck, ((board.boardSettings.playerCount or getSeatedPlayerCount()) <= 4 and 30) or 60)
+                end
+            end
+        end
+    },
+    ["Platinums"] = {
+        contents = {"Platinum"},
+        guids = {["Zone"] = "99c438", ["Mat"] = "b53849"}
+    },
+    ["Curses"] = {
+        contents = {"Curse"},
+        guids = {["Zone"] = "6555c4", ["Mat"] = "2b624e"},
+        setup = function(board)
+            local zone = getObjectFromGUID(basicPiles["Curses"].guids["Zone"])
+            if not zone then
+                printToAll("No Zone found for Curses.", Color.Yellow)
+            else
+                local deck = findDeck(zone)
+                if deck then
+                    setDeckSize(deck, math.max(((board.boardSettings.playerCount or getSeatedPlayerCount()) - 1) * 10, 10))
+                end
+            end
+        end
+    },
+    ["Estates"] = {
+        contents = {"Estate"},
+        guids = {["Zone"] = "3c7d82", ["Mat"] = "fc44d0"},
+        setup = function(board)
+            local zone = getObjectFromGUID(basicPiles["Estates"].guids["Zone"])
+            if not zone then
+                printToAll("No Zone found for Estates.", Color.Yellow)
+            else
+                local deck = findDeck(zone)
+                if deck then
+                    setDeckSize(deck, ((board.boardSettings.playerCount or getSeatedPlayerCount()) <= 2 and 8) or 12)
+                end
+            end
+        end
+    },
+    ["Duchies"] = {
+        contents = {"Duchy"},
+        guids = {["Zone"] = "abbc0e", ["Mat"] = "c80e6c"},
+        setup = function(board)
+            local zone = getObjectFromGUID(basicPiles["Duchies"].guids["Zone"])
+            if not zone then
+                printToAll("No Zone found for Duchies.", Color.Yellow)
+            else
+                local deck = findDeck(zone)
+                if deck then
+                    setDeckSize(deck, ((board.boardSettings.playerCount or getSeatedPlayerCount()) <= 2 and 8) or 12)
+                end
+            end
+        end
+    },
+    ["Provinces"] = {
+        contents = {"Province"},
+        guids = {["Zone"] = "16a085", ["Mat"] = "46e094"},
+        setup = function(board)
+            local zone = getObjectFromGUID(basicPiles["Provinces"].guids["Zone"])
+            if not zone then
+                printToAll("No Zone found for Provinces.", Color.Yellow)
+            else
+                local deck = findDeck(zone)
+                if deck then
+                    local playerCount = (board.boardSettings.playerCount or getSeatedPlayerCount())
+                    local size = 18
+                    if playerCount <= 5 then size = 15 end
+                    if playerCount <= 4 then size = 12 end
+                    if playerCount <= 2 then size = 8 end
+                    setDeckSize(deck, size)
+                end
+            end
+        end
+    },
+    ["Colonies"] = {
+        contents = {"Colony"},
+        guids = {["Zone"] = "4e8983", ["Mat"] = "f22317"},
+        setup = function(board)
+            local zone = getObjectFromGUID(basicPiles["Colonies"].guids["Zone"])
+            if not zone then
+                printToAll("No Zone found for Colonies.", Color.Yellow)
+            else
+                local deck = findDeck(zone)
+                if deck then
+                    setDeckSize(deck, ((board.boardSettings.playerCount or getSeatedPlayerCount()) <= 2 and 8) or 12)
+                end
+            end
+        end
+    },
+    ["Ruins Pile"] = {
+        contents = {"Abandoned Mine", "Ruined Library", "Ruined Market", "Ruined Village", "Survivors"},
+        guids = {["Zone"] = "e7b423", ["Mat"] = "624106"},
+        setup = function(board)
+            local zone = getObjectFromGUID(basicPiles["Ruins Pile"].guids["Zone"])
+            if not zone then
+                printToAll("No Zone found for Ruins Pile.", Color.Yellow)
+            else
+                local deck = findDeck(zone)
+                if deck then
+                    deck.randomize()
+                    setDeckSize(deck, math.max(((board.boardSettings.playerCount or getSeatedPlayerCount()) - 1) * 10, 10))
+                end
+            end
+        end
+    },
+}
+
+-- a table of what each non-Supply pile contains as well as the zone the pile is in
+nonSupplyPiles = {
+    ["Prizes"] = {
+        contents = {"Bag of Gold", "Diadem", "Followers", "Princess", "Trusty Steed"},
+        guids = {["Zone"] = "29daf7", ["Mat"] = "d5887b"}
+    },
+    ["Madman Pile"] = {
+        contents = "Madman",
+        guids = {["Zone"] = "89dca4", ["Mat"] = "a3a3f8"}
+    },
+    ["Mercenary Pile"] = {
+        contents = "Mercenary",
+        guids = {["Zone"] = "9f282c", ["Mat"] = "264d5e"}
+    },
+    ["Spoils Pile"] = {
+        contents = "Spoils",
+        guids = {["Zone"] = "c4d056", ["Mat"] = "dedd90"}
+    },
+    ["Treasure Hunter Pile"] = {
+        contents = "Treasure Hunter",
+        guids = {["Zone"] = "07341c", ["Mat"] = "3f3675"}
+    },
+    ["Warrior Pile"] = {
+        contents = "Warrior",
+        guids = {["Zone"] = "ce4c41", ["Mat"] = "58b157"}
+    },
+    ["Hero Pile"] = {
+        contents = "Hero",
+        guids = {["Zone"] = "d1e459", ["Mat"] = "7ff05c"}
+    },
+    ["Champion Pile"] = {
+        contents = "Champion",
+        guids = {["Zone"] = "1ee432", ["Mat"] = "ac9988"}
+    },
+    ["Soldier Pile"] = {
+        contents = "Soldier",
+        guids = {["Zone"] = "fb602d", ["Mat"] = "fb8b29"}
+    },
+    ["Fugitive Pile"] = {
+        contents = "Fugitive",
+        guids = {["Zone"] = "1f6b93", ["Mat"] = "dd9c06"}
+    },
+    ["Disciple Pile"] = {
+        contents = "Disciple",
+        guids = {["Zone"] = "573b4a", ["Mat"] = "fb3a5a"}
+    },
+    ["Teacher Pile"] = {
+        contents = "Teacher",
+        guids = {["Zone"] = "af118c", ["Mat"] = "ddd6fe"}
+    },
+    ["Will-o'-Wisp Pile"] = {
+        contents = "Will-o'-Wisp",
+        guids = {["Zone"] = "8f8ba1", ["Mat"] = "be1e86"}
+    },
+    ["Wish Pile"] = {
+        contents = "Wish",
+        guids = {["Zone"] = "0fe09c", ["Mat"] = "76feaf"}
+    },
+    ["Bat Pile"] = {
+        contents = "Bat",
+        guids = {["Zone"] = "141a3f", ["Mat"] = "3734fb"}
+    },
+    ["Imp Pile"] = {
+        contents = "Imp",
+        guids = {["Zone"] = "c5c39f", ["Mat"] = "bef3f2"}
+    },
+    ["Ghost Pile"] = {
+        contents = "Ghost",
+        guids = {["Zone"] = "eb4c31", ["Mat"] = "0739ed"}
+    },
+    ["Horse Pile"] = {
+        contents = "Horse",
+        guids = {["Zone"] = "82ca0b", ["Mat"] = "b470be"}
+    },
+}
+
+-- a table of each mat and token and its functionality
+matsAndTokens = {
+    ["Black Market Mat"] = {
+        guids = {
+            ["Mat"] = "b60e21",
+            ["Deck"] = {["Zone"] = "a58e43", ["Mat"] = "031a4d"},
+            ["Discard"] = {["Zone"] = "2ba401", ["Mat"] = "668dbc"}
+        }
+    },
+    ["Trade Route Mat"] = {
+        guids = {["Mat"] = "b853e8"}
+    },
+    ["Embargo Tokens"] = {
+        guids = {"7c2165"}
+    },
+    ["Trash Mat"] = {
+        dontDestroy = true,
+        guids = {["Mat"] = "b282fd"}
+    },
+    ["Randomizer Deck"] = {
+        guids = {
+            ["Deck"] = {["Zone"] = "95a9d3", ["Mat"] = "e9084b"},
+            ["Discard"] = {["Zone"] = "268abf", ["Mat"] = "148c0f"}
+        }
+    },
+    ["Player Mat"] = {
+        dontDestroy = true,
+        guids = {
+            ["Pink"]   = {["Zone"] = "66d256", ["Mat"] = "82d604"},
+            ["Green"]  = {["Zone"] = "875144", ["Mat"] = "10b5cc"},
+            ["White"]  = {["Zone"] = "be0568", ["Mat"] = "f20217"},
+            ["Red"]    = {["Zone"] = "089ee2", ["Mat"] = "2fa48d"},
+            ["Blue"]   = {["Zone"] = "8313c1", ["Mat"] = "a2a688"},
+            ["Yellow"] = {["Zone"] = "37eaed", ["Mat"] = "eae7df"}
+        }
+    },
+    ["Victory Points"] = {
+        guids = {
+            ["Pink"]   = "1a8a90",
+            ["Green"]  = "318b12",
+            ["White"]  = "fd9212",
+            ["Red"]    = "a5bdfe",
+            ["Blue"]   = "460fc7",
+            ["Yellow"] = "48c7fe"
+        }
+    },
+    ["Coffers"] = {
+        guids = {
+            ["Pink"]   = "4c451c",
+            ["Green"]  = "1a8770",
+            ["White"]  = "f6bff9",
+            ["Red"]    = "a838ad",
+            ["Blue"]   = "f9b793",
+            ["Yellow"] = "0f2f7e"
+        }
+    },
+    ["Debt"] = {
+        guids = {
+            ["Pink"]   = "2ba471",
+            ["Green"]  = "048389",
+            ["White"]  = "a5991e",
+            ["Red"]    = "13cb98",
+            ["Blue"]   = "359c7d",
+            ["Yellow"] = "d26450"
+        }
+    },
+    ["Villagers"] = {
+        guids = {
+            ["Pink"]   = "89f6fb",
+            ["Green"]  = "5134b3",
+            ["White"]  = "71247d",
+            ["Red"]    = "9ab08c",
+            ["Blue"]   = "9164ca",
+            ["Yellow"] = "e9311d"
+        }
+    },
+    ["Pirate Ship Coins"] = {
+        guids = {
+            ["Pink"]   = "07ec19",
+            ["Green"]  = "4de60b",
+            ["White"]  = "31e422",
+            ["Red"]    = "d114f5",
+            ["Blue"]   = "6a1b94",
+            ["Yellow"] = "f39723"
+        }
+    },
+    ["Exile Mat"] = {
+        guids = {
+            ["Pink"]   = "8c43c7",
+            ["Green"]  = "41ff7f",
+            ["White"]  = "b84b53",
+            ["Red"]    = "c175d2",
+            ["Blue"]   = "b2c72e",
+            ["Yellow"] = "6bab0a"
+        }
+    },
+    ["Tavern Mat"] = {
+        dontDestroyDeck = true,
+        guids = {
+            ["Pink"]   = {["Zone"] = "b742a1", ["Mat"] = "73b44f"},
+            ["Green"]  = {["Zone"] = "e53225", ["Mat"] = "0c3771"},
+            ["White"]  = {["Zone"] = "50c9ee", ["Mat"] = "4caf71"},
+            ["Red"]    = {["Zone"] = "f1a05f", ["Mat"] = "3932e5"},
+            ["Blue"]   = {["Zone"] = "dca674", ["Mat"] = "76e257"},
+            ["Yellow"] = {["Zone"] = "e57747", ["Mat"] = "38103f"}
+        }
+    },
+    ["Native Village Mat"] = {
+        guids = {
+            ["Pink"]   = "3f337f",
+            ["Green"]  = "2fa2e2",
+            ["White"]  = "fd4653",
+            ["Red"]    = "8d8bb1",
+            ["Blue"]   = "62814d",
+            ["Yellow"] = "52a2e8"
+        }
+    },
+    ["Deck"] = {
+        dontDestroy = true,
+        dontDestroyDeck = true,
+        guids = {
+            ["Pink"]   = {["Zone"] = "161880", ["Mat"] = "dc840a"},
+            ["Green"]  = {["Zone"] = "3e5cfc", ["Mat"] = "996e9f"},
+            ["White"]  = {["Zone"] = "f2146c", ["Mat"] = "e4c378"},
+            ["Red"]    = {["Zone"] = "5eca2b", ["Mat"] = "53b5fb"},
+            ["Blue"]   = {["Zone"] = "dde784", ["Mat"] = "a044b0"},
+            ["Yellow"] = {["Zone"] = "1fed5b", ["Mat"] = "cda6b9"}
+        }
+    },
+    ["Discard"] = {
+        dontDestroy = true,
+        dontDestroyDeck = true,
+        guids = {
+            ["Pink"]   = {["Zone"] = "eca8c0", ["Mat"] = "806f43"},
+            ["Green"]  = {["Zone"] = "44c6e3", ["Mat"] = "b6f3bc"},
+            ["White"]  = {["Zone"] = "b48e02", ["Mat"] = "c50c38"},
+            ["Red"]    = {["Zone"] = "16c9ce", ["Mat"] = "bb969d"},
+            ["Blue"]   = {["Zone"] = "34fc95", ["Mat"] = "d90a4d"},
+            ["Yellow"] = {["Zone"] = "7916e6", ["Mat"] = "d223fd"}
+        }
+    },
+    ["Island Mat"] = {
+        guids = {
+            ["Pink"]   = "1f1d47",
+            ["Green"]  = "a58748",
+            ["White"]  = "cae961",
+            ["Red"]    = "47484f",
+            ["Blue"]   = "f42e05",
+            ["Yellow"] = "5c7e33"
+        }
+    },
+    ["Set Aside Token"] = {
+        guids = {
+            ["Pink"]   = "18fe35",
+            ["Green"]  = "bfdd72",
+            ["White"]  = "4d4d24",
+            ["Red"]    = "65bcd7",
+            ["Blue"]   = "461fcf",
+            ["Yellow"] = "593fbd"
+        }
+    },
+    ["-1 Card Token"] = {
+        guids = {
+            ["Pink"]   = "2f4572",
+            ["Green"]  = "5c4411",
+            ["White"]  = "c805b3",
+            ["Red"]    = "01d25d",
+            ["Blue"]   = "bd7bd7",
+            ["Yellow"] = "ffca2f"
+        }
+    },
+    ["-1 Coin Token"] = {
+        guids = {
+            ["Pink"]   = "b56d40",
+            ["Green"]  = "f27cdd",
+            ["White"]  = "60da3b",
+            ["Red"]    = "ec3692",
+            ["Blue"]   = "d7c452",
+            ["Yellow"] = "d866a0"
+        }
+    },
+    ["-2 Cost Token"] = {
+        guids = {
+            ["Pink"]   = "dd4db1",
+            ["Green"]  = "2e7fb1",
+            ["White"]  = "b1f09d",
+            ["Red"]    = "2ccfa3",
+            ["Blue"]   = "e29300",
+            ["Yellow"] = "85112e"
+        }
+    },
+    ["Trashing Token"] = {
+        guids = {
+            ["Pink"]   = "ef949d",
+            ["Green"]  = "0a3d69",
+            ["White"]  = "65caf8",
+            ["Red"]    = "e4ac77",
+            ["Blue"]   = "af8ff3",
+            ["Yellow"] = "4fac52"
+        }
+    },
+    ["Estate Token"] = {
+        guids = {
+            ["Pink"]   = "1a0ffd",
+            ["Green"]  = "ed137a",
+            ["White"]  = "a4e501",
+            ["Red"]    = "2e6a7f",
+            ["Blue"]   = "4b9e5b",
+            ["Yellow"] = "78b646"
+        }
+    },
+    ["Journey Token"] = {
+        guids = {
+            ["Pink"]   = "6be8c5",
+            ["Green"]  = "c77f32",
+            ["White"]  = "467620",
+            ["Red"]    = "65676a",
+            ["Blue"]   = "14f400",
+            ["Yellow"] = "79f6b5"
+        }
+    },
+    ["+1 Card Token"] = {
+        guids = {
+            ["Pink"]   = "c8b5e2",
+            ["Green"]  = "e53945",
+            ["White"]  = "9afa9c",
+            ["Red"]    = "025ab0",
+            ["Blue"]   = "6b586f",
+            ["Yellow"] = "ce8a91"
+        }
+    },
+    ["+1 Action Token"] = {
+        guids = {
+            ["Pink"]   = "96e1ef",
+            ["Green"]  = "b6993b",
+            ["White"]  = "99e974",
+            ["Red"]    = "90b742",
+            ["Blue"]   = "5959d0",
+            ["Yellow"] = "3d3cd3"
+        }
+    },
+    ["+1 Coin Token"] = {
+        guids = {
+            ["Pink"]   = "7b25b3",
+            ["Green"]  = "322915",
+            ["White"]  = "f5ffde",
+            ["Red"]    = "cb6417",
+            ["Blue"]   = "28e8f5",
+            ["Yellow"] = "060245"
+        }
+    },
+    ["+1 Buy Token"] = {
+        guids = {
+            ["Pink"]   = "8c6b69",
+            ["Green"]  = "d683bf",
+            ["White"]  = "11b9ad",
+            ["Red"]    = "1621d1",
+            ["Blue"]   = "04fed4",
+            ["Yellow"] = "20603e"
+        }
+    },
+    ["Owns Project Tokens"] = {
+        guids = {
+            ["Pink"]   = {"f89471", "e1aa16"},
+            ["Green"]  = {"753f52", "53d51a"},
+            ["White"]  = {"7056a3", "d3baa9"},
+            ["Red"]    = {"b7dc65", "081686"},
+            ["Blue"]   = {"356ba6", "fa4179"},
+            ["Yellow"] = {"e891e5", "13557d"}
+        },
+        setup = function(board)
+            local projectCount = 0
+            for _, name in pairs(board:GetSideways()) do
+                if cards[name] and cards[name].type and hasValue(cards[name].type, "Project") then
+                    projectCount = projectCount + 1
+                end
+            end
+            -- delete the extra token since it isn't needed
+            if projectCount < 2 then
+                local guids = matsAndTokens["Owns Project Tokens"].guids
+                for _, t in pairs(guids) do
+                    local obj = getObjectFromGUID(t[2])
+                    if obj then
+                        obj.destruct()
+                    end
+                end
+            end
+        end
+    }
+}
+
+-- a table of what each extra group contains as well as the zone it is in
+extras = {
+    ["Zombies"] = {
+        contents = {"Zombie Apprentice", "Zombie Mason", "Zombie Spy"},
+        guids = {["Zone"] = "9abdb3"}
+    },
+    ["Boons"] = {
+        contents = {
+            "The Earth's Gift",
+            "The Field's Gift",
+            "The Flame's Gift",
+            "The Forest's Gift",
+            "The Moon's Gift",
+            "The Mountain's Gift",
+            "The River's Gift",
+            "The Sea's Gift",
+            "The Sky's Gift",
+            "The Sun's Gift",
+            "The Swamp's Gift",
+            "The Wind's Gift"
+        },
+        guids = {["Deck"] = {["Zone"] = "8dbbe3", ["Mat"] = "859ea1"}, ["Discard"] = {["Zone"] = "e0da45", ["Mat"] = "486bcb"}}
+    },
+    ["Hexes"] = {
+        contents = {
+            "Bad Omens",
+            "Delusion",
+            "Envy",
+            "Famine",
+            "Fear",
+            "Greed",
+            "Haunting",
+            "Locusts",
+            "Misery",
+            "Plague",
+            "Poverty",
+            "War"
+        },
+        guids = {["Deck"] = {["Zone"] = "132876", ["Mat"] = "ad947d"}, ["Discard"] = {["Zone"] = "ed70b1", ["Mat"] = "b37648"}}
+    },
+    ["States"] = {
+        contents = {"Envious / Deluded", "Miserable / Twice Miserable", "Lost in the Woods"},
+        guids = {["Zone"] = "f87b76", ["Mat"] = "5e43cc"}
+    },
+    ["Artifacts"] = {
+        contents = {"Flag", "Horn", "Key", "Lantern", "Treasure Chest"},
+        guids = {["Zone"] = "6000b8", ["Mat"] = "9c974f"}
+    },
+}

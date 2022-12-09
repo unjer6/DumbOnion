@@ -1,0 +1,616 @@
+-- an object representing the settings used to input a custom board
+BoardSettings = {
+    -- the randomizers used for this kingdom (only 1-10)
+    kingdom = {--[["Cellar", "Chapel", "Sauna / Avanto", ...]]},
+    -- the randomizer sideways cards used for this board
+    sideways = {--[["Alms", "Exploration"]]},
+    -- other features and settings for this board (anything that isn't kingdom or sideways)
+    otherSettings = {--[[["Black Market"] = {"foo", "bar"}, ["Bane"] = "thing", ["Obelisk Target"] = "another thing", ["Use Plat"] = true]]},
+    -- how many players the board should be set up for
+    playerCount = nil,
+    -- what turn order the colors are in
+    turnOrder = {},
+    -- whether or not this settings object is valid data or not
+    isDirty = false,
+
+    -- how many unknowns there are of each name (used for ReadSettings)
+    unknownNames = {},
+
+    -- object constructor
+    New = function(self, params)
+        local o = {}
+        for key, value in pairs(self) do
+            if type(value) == "table" then
+                o[key] = {}
+            end
+        end
+        setmetatable(o, {__index = self})
+
+        if params and params.kingdom then
+            o:SetKingdom(unpack(params.kingdom))
+        end
+        if params and params.sideways then
+            o:SetSideways(unpack(params.sideways))
+        end
+        if params and params.other then
+            for key, value in pairs(params.other) do
+                o:AddOther(key, value)
+            end
+        end
+
+        return o
+    end,
+
+    -- set the kingdom to a list of randomizer card names
+    SetKingdom = function(self, ...)
+        if not ... then return end
+        self.kingdom = {...}
+    end,
+    -- set the sideways cards to a list of randomizer card names
+    SetSideways = function(self, ...)
+        if not ... then return end
+        self.sideways = {...}
+    end,
+    -- add (or overwrite) an other setting for this board
+    AddOther = function(self, key, value)
+        if type(value) == "table" then
+            value = table.copy(value)
+        end
+        self.otherSettings[key] = value
+    end,
+    -- sets the player count to how many players are seated or whatever value is
+    SetPlayerCount = function(self, value)
+        value = value or getSeatedPlayerCount()
+        self.playerCount = value
+    end,
+    SetTurnOrder = function(self, firstPlayerColor)
+        local startIndex = hasValue(players, firstPlayerColor)
+        if startIndex then
+            self.turnOrder = {}
+            for i = startIndex, (#players - 1) + startIndex do
+                table.insert(self.turnOrder, players[((i - 1) % (#players)) + 1])
+            end
+        end
+    end,
+
+    -- parses the settings that should be used for this board from the contents of the board
+    -- calls the card's getSettings function which should add other settings to the board settings using AddOther
+    ReadSettings = function(self)
+        -- get all kingdom names
+        local kingdomNames = {}
+        for _, zone in ipairs(objects.supply.kingdomZones) do
+            local name = self:ReadSlot(zone)
+            if name then
+                table.insert(kingdomNames, name)
+            elseif name == false then
+                self.isDirty = true
+                return
+            end
+        end
+        self:SetKingdom(unpack(kingdomNames))
+
+        -- get all sideways names
+        local sidewaysNames = {}
+        for _, zone in ipairs(objects.supply.eventZones) do
+            local name = self:ReadSlot(zone)
+            if name then
+                table.insert(sidewaysNames, name)
+            elseif name == false then
+                self.isDirty = true
+                return
+            end
+        end
+        self:SetSideways(unpack(sidewaysNames))
+
+        -- finally set player count
+        self:SetPlayerCount()
+    end,
+    -- parses what is inside a single slot of the board and returns the name of what is in it
+    -- returns nil if nothing is found
+    -- returns false if there is an error reading
+    ReadSlot = function(self, zone)
+        local cardsInZone = getAllCardsInZone(zone)
+        if #cardsInZone > 1 then return false end
+        if #cardsInZone < 1 then return nil end
+        local obj = cardsInZone[1]
+        if #obj.getZones() > 1 then return false end
+        if obj.type == "Deck" then return false end
+
+        local name = obj.getName()
+
+        if not cards[name] then
+            if self.unknownNames[name] then
+                self.unknownNames[name] = self.unknownNames[name] + 1
+                local newName = name
+                if not (newName == "") then newName = newName .. " " end
+                newName = newName .. "(" .. self.unknownNames[name] .. ")"
+                obj.setName(newName)
+                name = newName
+            else
+                self.unknownNames[name] = 1
+            end
+        end
+
+        return name
+    end,
+    -- parses what is inside a single slot of the board and returns a table of all names of what is in it
+    -- use when you're reading the contents of a deck in a slot
+    -- returns nil if nothing is found
+    -- returns false if there is an error reading
+    ReadSlotTable = function(self, zone)
+        local names = {}
+
+        local cardsInZone = getAllCardsInZone(zone)
+        if #cardsInZone > 1 then return false end
+        if #cardsInZone < 1 then return names end
+        local obj = cardsInZone[1]
+        if #obj.getZones() > 1 then return false end
+        if obj.type == "Deck" then
+            for _, o in ipairs(obj.getObjects()) do
+                table.insert(names, o.name)
+            end
+        else
+            table.insert(names, obj.getName())
+        end
+
+        return names
+    end,
+
+    -- validates whehter or not the settings are a legal game of dominion
+    -- if debug is true then it is a lot more lenient
+    ValidateSettings = function(self, debug)
+        if self.isDirty then return false end
+
+        if not debug and #self.kindom ~= 10 then
+            return false
+        end
+        for i, name in ipairs(self.kingdom) do
+            if cards[name] and cards[name].class and not hasValue(cards[name].class, "Kingdom") then
+                return false
+            end
+            for i2, name2 in ipairs(self.kingdom) do
+                if i2 ~= i and name2 == name then
+                    return false
+                end
+            end
+        end
+        for i, name in ipairs(self.sideways) do
+            if cards[name] and cards[name].class and not hasValue(cards[name].class, "Sideways") then
+                return false
+            end
+            for i2, name2 in ipairs(self.sideways) do
+                if i2 ~= i and name2 == name then
+                    return false
+                end
+            end
+        end
+
+        return true
+    end
+}
+
+-- an object defining a dominion board and every feature inside it
+Board = {
+    -- the names of the cards in each kingdom pile in order 1-10 as well as other piles that are part of the kingdom (Bane, etc)
+    kingdom = {--[[
+        {
+            randomizer = "Cellar",
+            contents = {"Cellar"},
+        }
+        {
+            randomizer = "Sauna / Avanto",
+            contents = {"Sauna", "Avanto"}
+        }
+    ]]},
+    -- other kingdom piles that are not 1-10 (needed so JSON.encode works)
+    otherKingdom = {--[[["Bane"] = {...}]]},
+    -- the names of the cards in each sideways slot in order left to right
+    sideways = {--[["Alms", "Exploration"]]},
+    -- other sideways slots that are not 1-4 (needed so JSON.encode works)
+    otherSideways = {--[[["Bane"] = "foobar"]]},
+    -- the names of the basic piles (not cards themselves) and the cards inside those piles
+    basics = {--[[["Coppers"] = {"Copper"}, ..., ["Ruins"] = {"Survivors", ...}]]},
+    -- the names of the non-Supply cards used in this game keyed by the name of the pile they are in
+    nonSupply = {--[[["Horse Pile"] = {"Horse"}, ["Prizes"] = {"Bag of Gold", ...}]]},
+    -- the names of tokens and mats used this game as a set
+    matsAndTokens = {--[[["Tavern Mat"] = true, ...]]},
+    -- the names of extra piles and what cards are needed in those piles (not all cards from a pile must be included just the ones that are needed for this board)
+    -- every entry (even ones with single cards) must be tables
+    extras = {--[[["Artifacts"] = {"Horn", "Lantern"}, ["Boons"] = {"foo", "bar", ...}, ["Zombies"] = {"foo", ...}]]},
+    -- the names of cards that are starting in player's decks
+    startingCards = {--[["Copper", "Estate", "Pouch"]]},
+    -- names of other features and the cards inside them as well as other options about the board state
+    -- (these features are not handled by the board and must be setup by the card that uses them)
+    otherFeatures = {--[[["Black Market"] = {"foo", "bar", ...}, ["Obelisk Target"] = {"foo", "bar"}]]},
+    -- the settings used to initialize this board
+    boardSettings = {--[[see BoardSettings above]]},
+    -- whether this board data ever got dirty during SetBoard
+    -- if a card's function runs into an error then it should broadcast the error and set this flag to true
+    isDirty = false,
+    coroutinesRunning = 0,
+
+    -- object constructor
+    New = function(self)
+        local o = {}
+        for key, value in pairs(self) do
+            if type(value) == "table" then
+                o[key] = {}
+            end
+        end
+        setmetatable(o, {__index = self})
+        return o
+    end,
+
+    --[[
+    Functions used to recursively add features to this board
+    Every function below will return a string as an error message if an error occured or nil if no error
+    --]]
+
+    -- adds a group of names to the next kingdom pile and calls setup on those cards
+    -- contents is the name of the randomizer card added
+    -- key is optional and is used for adding other kingdom piles (Bane, etc)
+    AddKingdomPile = function(self, name, key)
+        assert(type(key) == "string" or key == nil, "ERROR: Failed to add Kingdom card. Key must be a string.")
+        local key = key or #self.kingdom + 1
+        assert(type(key) == "string" or (type(key) == "number" and key <= #objects.supply.kingdomZones and key > 0), "ERROR: Attempted to add a kingdom pile out of bounds.")
+        if not name then return end
+        assert(type(name) == "string", "ERROR: Failed to add Kingdom card. Name must be a string.")
+        local contents = nil
+        local isContentsDifferent = false
+        if cards[name] and cards[name].replacement then
+            if replacementPiles[cards[name].replacement] and replacementPiles[cards[name].replacement].contents then
+                if type(replacementPiles[cards[name].replacement].contents) == "table" then
+                    contents = table.copy(replacementPiles[cards[name].replacement].contents)
+                else
+                    contents = {replacementPiles[cards[name].replacement].contents}
+                end
+                isContentsDifferent = true
+            else
+                printToAll("Couldn't find replacement for card "..name..".", Color.Yellow)
+            end
+        end
+        if contents then
+            for _, value in pairs(contents) do
+                assert(type(value) == "string", "ERROR: Failed to add Kingdom card. Replacement pile contents must contain strings.")
+            end
+        else
+            contents = {name}
+        end
+
+        if type(key) == "number" then
+            if not self.kingdom[key] then
+                self.kingdom[key] = {
+                    randomizer = name,
+                    contents = contents
+                }
+                self:GetDependencies(name)
+                if isContentsDifferent then self:GetDependencies(contents) end
+            end
+        elseif type(key) == "string" then
+            if not self.otherKingdom[key] then
+                self.otherKingdom[key] = {
+                    randomizer = name,
+                    contents = contents
+                }
+                self:GetDependencies(name)
+                if isContentsDifferent then self:GetDependencies(contents) end
+            end
+        end
+    end,
+    -- adds a card name to the next sideways slot (unlike other piles there can only be one card per sideways)
+    -- contents is the name of the randomizer card added
+    -- key is optional and is used for adding other kingdom piles (like Bane, etc)
+    AddSidewaysCard = function(self, name, key)
+        assert(type(key) == "string" or key == nil, "ERROR: Failed to add Sideways card. Key must be a string.")
+        local key = key or #self.sideways + 1
+        assert(type(key) == "string" or (type(key) == "number" and key <= #objects.supply.eventZones and key > 0), "ERROR: Attempted to add a sideways card out of bounds.")
+        if not name then return end
+        assert(type(name) == "string", "ERROR: Failed to add Sideways card. Name must be a string.")
+
+        if type(key) == "number" then
+            if not self.sideways[key] then
+                self.sideways[key] = name
+                self:GetDependencies(name)
+            end
+        elseif type(key) == "string" then
+            if not self.otherSideways[key] then
+                self.otherSideways[key] = name
+                self:GetDependencies(name)
+            end
+        end
+    end,
+    -- adds a pile name to the next basic pile (pile names are different from card names)
+    AddBasicPile = function(self, key)
+        if not key then return end
+        assert(type(key) == "string", "ERROR: Failed to add Basic Pile. Key must be a string.")
+        local contents = nil
+        if basicPiles[key] and basicPiles[key].contents then
+            if type(basicPiles[key].contents) == "table" then
+                contents = table.copy(basicPiles[key].contents)
+            else
+                contents = {basicPiles[key].contents}
+            end
+        end
+        if not contents then return end
+        if type(contents) == "table" then
+            for _, value in pairs(contents) do
+                assert(type(value) == "string", "ERROR: Failed to add Basic pile. Basic pile contents must contain strings.")
+            end
+        end
+
+        if not self.basics[key] then
+            self.basics[key] = contents
+            self:GetDependencies(contents)
+        end
+    end,
+    -- adds a group of names to the given non-Supply pile name
+    -- this is handled automatically when a card is added to the board
+    AddNonSupplyPile = function(self, key)
+        if not key then return end
+        assert(type(key) == "string", "ERROR: Failed to add non-Supply Pile. Key must be a string.")
+        local contents = nil
+        if nonSupplyPiles[key] and nonSupplyPiles[key].contents then
+            if type(nonSupplyPiles[key].contents) == "table" then
+                contents = table.copy(nonSupplyPiles[key].contents)
+            else
+                contents = {nonSupplyPiles[key].contents}
+            end
+        end
+        if not contents then return end
+        if type(contents) == "table" then
+            for _, value in pairs(contents) do
+                assert(type(value) == "string", "ERROR: Failed to add non-Supply pile. Non-Supply pile contents must contain strings.")
+            end
+        end
+
+        if not self.nonSupply[key] then
+            self.nonSupply[key] = contents
+            self:GetDependencies(contents)
+        end
+    end,
+    -- adds a mat or token name to the mats and tokens used on this board
+    -- this is handled automatically when a card is added to the board
+    AddMatOrToken = function(self, key)
+        if not key then return end
+        assert(type(key) == "string", "ERROR: Failed to add Mat or Token. Key must be a string.")
+        if not matsAndTokens[key] then return end
+
+        if not self.matsAndTokens[key] then
+            self.matsAndTokens[key] = true
+            if matsAndTokens[key] and matsAndTokens[key].getDependencies then
+                matsAndTokens[key].getDependencies(self, self.boardSettings)
+            end
+        end
+    end,
+    -- adds an extra (artifacts, boons, etc) to this board
+    -- this is handled automatically when a card is added to the board
+    -- contents can be a table of what cards in this extra pack are needed or true to include all cards
+    AddExtra = function(self, key, contents)
+        if not key then return end
+        assert(type(key) == "string", "ERROR: Failed to add Extra. Key must be a string.")
+        if not contents then return end
+        assert(type(contents) == "string" or type(contents) == "table" or type(contents) == "boolean", "ERROR: Failed to add Extra. Contents must be a string, table, or boolean.")
+        if contents == true then
+            if extras[key] and extras[key].contents then
+                if type(extras[key].contents == "table") then
+                    contents = table.copy(extras[key].contents)
+                else
+                    contents = {extras[key].contents}
+                end
+            end
+        end
+        if contents == true then return end
+        if type(contents) == "table" then
+            for _, value in pairs(contents) do
+                assert(type(value) == "string", "ERROR: Failed to add Extra. Extra contents must contain strings.")
+            end
+        end
+
+        if self.extras[key] then
+            local set1 = set.new((type(self.extras[key]) ~= "table" and {self.extras[key]}) or self.extras[key])
+            local set2 = set.new((type(contents) ~= "table" and {contents}) or contents)
+            self.extras[key] = set.toTable(set1 + set2)
+            contents = set.toTable(set2 - set1)
+        else
+            self.extras[key] = contents
+        end
+        self:GetDependencies(contents)
+    end,
+    -- adds a starting card found in player's starting decks to the board
+    AddStartingCard = function(self, name)
+        if not name then return end
+        assert(type(name) == "string", "ERROR: Failed to add Starting card. Name must be a string.")
+
+        if not hasValue(self.startingCards, name) then
+            self.startingCards[#self.startingCards + 1] = name
+            self:GetDependencies(name)
+        end
+    end,
+    -- adds some other unknown feature to this board.
+    -- DOES NOT call GetDependencies on that card. You must do it yourself if you need to get them.
+    -- returns true if the features added were new (and need to have GetDependencies called)
+    AddOtherFeature = function(self, key, value)
+        if not key then return end
+        if not value then return end
+        assert(type(key) == "string", "ERROR: Failed to add Other feature. Key must be a string.")
+        if type(value) == "table" then
+            for _, v in pairs(value) do
+                assert(type(v) ~= "table", "ERROR: Failed to add Other feature. Value cannot be a table of tables.")
+            end
+            value = table.copy(value)
+        end
+
+        if not self.otherFeatures[key] then
+            self.otherFeatures[key] = value
+            return true
+        end
+    end,
+
+    -- gets all the dependencies for this card or cards in a table and adds them to the board as well
+    -- cardName can be a string or a table of strings
+    GetDependencies = function(self, cardName)
+        if not cardName then return end
+        if self.isDirty then return end
+
+        if type(cardName) == "table" then
+            for i, name in ipairs(cardName) do
+                self:GetDependencies(name)
+            end
+        elseif type(cardName) == "string" then
+            if cards[cardName] then
+                -- first look for non-Supply cards this card needs
+                if cards[cardName].nonSupply then
+                    if type(cards[cardName].nonSupply) == "table" then
+                        for _, value in ipairs(cards[cardName].nonSupply) do
+                            self:AddNonSupplyPile(value)
+                        end
+                    else
+                        self:AddNonSupplyPile(cards[cardName].nonSupply)
+                    end
+                end
+                -- look for mats and tokens this card needs
+                if cards[cardName].matsAndTokens then
+                    if type(cards[cardName].matsAndTokens) == "table" then
+                        for _, value in ipairs(cards[cardName].matsAndTokens) do
+                            self:AddMatOrToken(value)
+                        end
+                    else
+                        self:AddMatOrToken(cards[cardName].matsAndTokens)
+                    end
+                end
+                -- Look for extras this card needs
+                if cards[cardName].extras then
+                    for key, value in pairs(cards[cardName].extras) do
+                        self:AddExtra(key, value)
+                    end
+                end
+
+                -- call getDependencies for this card
+                if not self.isDirty then callCardEvent(cardName, "getDependencies", self, self.boardSettings) end
+            end
+        end
+    end,
+
+    -- returns a table of what randomizers are used in each kingdom slot
+    GetKingdomRandomizers = function(self)
+        local output = {}
+        for i, t in ipairs(self.kingdom) do
+            output[i] = t.randomizer
+        end
+        for k, t in pairs(self.otherKingdom) do
+            output[k] = t.randomizer
+        end
+        return output
+    end,
+    -- returns a table of what cards are used in each kingdom slot
+    GetKingdomContentsTable = function(self)
+        local output = {}
+        for i, t in ipairs(self.kingdom) do
+            output[i] = t.contents
+        end
+        for k, t in pairs(self.otherKingdom) do
+            output[k] = t.contents
+        end
+        return output
+    end,
+    -- returns an array of what cards are used in the entire kingdom
+    GetKingdomContentsArray = function(self)
+        local output = {}
+        for i, t in ipairs(self.kingdom) do
+            for _, name in ipairs(t.contents) do
+                table.insert(output, name)
+            end
+        end
+        for k, t in pairs(self.otherKingdom) do
+            for _, name in ipairs(t.contents) do
+                table.insert(output, name)
+            end
+        end
+        return output
+    end,
+    -- returns a table of what cards are used in each sideways slot
+    GetSideways = function(self)
+        local output = {}
+        for i, t in ipairs(self.sideways) do
+            output[i] = t
+        end
+        for k, t in pairs(self.otherSideways) do
+            output[k] = t
+        end
+        return output
+    end,
+    -- returns a set of all objects in this board that are needed and should not be deleted
+    GetDependenciesSet = function(self)
+        local s = set.new()
+        -- get basics
+        for name in pairs(self.basics) do
+            set.insert(s, name)
+        end
+        -- get other kingdom
+        for name in pairs(self.otherKingdom) do
+            set.insert(s, name)
+        end
+        -- get other sideways
+        for name in pairs(self.otherSideways) do
+            set.insert(s, name)
+        end
+        -- get nonSupply
+        for name in pairs(self.nonSupply) do
+            set.insert(s, name)
+        end
+        -- get matsAndTokens
+        for name in pairs(self.matsAndTokens) do
+            set.insert(s, name)
+        end
+        -- get extras
+        for name in pairs(self.extras) do
+            set.insert(s, name)
+        end
+        return s
+    end,
+
+    -- clears this board object
+    ClearBoard = function(self)
+        self.kingdom = {}
+        self.sideways = {}
+        self.basics = {}
+        self.nonSupply = {}
+        self.matsAndTokens = {}
+        self.extras = {}
+        self.otherFeatures = {}
+        self.boardSettings = {}
+    end,
+    -- sets this board with a given settings object
+    SetBoard = function(self, settings)
+        -- create a copy of settings
+        self.boardSettings = BoardSettings:New()
+        self.boardSettings:SetKingdom(unpack(settings.kingdom))
+        self.boardSettings:SetSideways(unpack(settings.sideways))
+        for k, v in pairs(settings.otherSettings) do
+            self.boardSettings:AddOther(k, v)
+        end
+        self.boardSettings:SetPlayerCount(settings.playerCount)
+
+        -- get the dependencies from general board rules
+        for _, t in pairs(BOARD_RULES) do
+            if t.getDependencies then
+                t.getDependencies(self, self.boardSettings)
+            end
+        end
+
+        -- add kingdom cards
+        for _, v in ipairs(self.boardSettings.kingdom) do
+            self:AddKingdomPile(v)
+        end
+        -- add sideways cards
+        for _, v in ipairs(self.boardSettings.sideways) do
+            self:AddSidewaysCard(v)
+        end
+    end,
+
+    -- sorts the kingdom and sideways tables
+    Sort = function(self)
+        table.sort(self.kingdom, function(a, b) return sort(a.randomizer, b.randomizer) end)
+        table.sort(self.sideways, sort)
+    end
+}

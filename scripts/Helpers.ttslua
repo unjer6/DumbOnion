@@ -1,0 +1,635 @@
+-- calls the event function name of a given card as well as on all its types and card attributes
+function callCardEvent(cardName, identifier, ...)
+    assert(cardName ~= nil, "ERROR: Cannot call event on card. Card name cannot be nil.")
+    assert(identifier ~= nil, "ERROR: Cannot call event on card. Event identifier cannot be nil.")
+    if not cards[cardName] then return end
+
+    -- call function on the card's attributes
+    for key, value in pairs(CARD_ATTRIBUTES) do
+        if cards[cardName][key] then
+            if value[identifier] then
+                value[identifier](cardName, ...)
+            end
+        end
+    end
+    -- call function on the card's types
+    if cards[cardName].type then
+        for _, type in ipairs(cards[cardName].type) do
+            if types[type] and types[type][identifier] then
+                types[type][identifier](cardName, ...)
+            end
+        end
+    end
+    -- call function on the card
+    if cards[cardName][identifier] then
+        cards[cardName][identifier](...)
+    end
+end
+
+-- calls the function name of a given card as well as on all its types and card attributes and returns the most specific return value
+function callCardFunc(cardName, identifier, ...)
+    assert(cardName ~= nil, "ERROR: Cannot call event on card. Card name cannot be nil.")
+    assert(identifier ~= nil, "ERROR: Cannot call event on card. Event identifier cannot be nil.")
+    if not cards[cardName] then return end
+
+    -- call function on the card
+    if cards[cardName][identifier] then
+        return cards[cardName][identifier](...)
+    end
+    -- call function on the card's types
+    if cards[cardName].type then
+        for _, type in ipairs(cards[cardName].type) do
+            if types[type] and types[type][identifier] then
+                return types[type][identifier](cardName, ...)
+            end
+        end
+    end
+    -- call function on the card's attributes
+    for key, value in pairs(CARD_ATTRIBUTES) do
+        if cards[cardName][key] then
+            if value[identifier] then
+                return value[identifier](cardName, ...)
+            end
+        end
+    end
+end
+
+-- returns the most specific value for a given property identifier
+function getCardProperty(cardName, identifier)
+    assert(cardName ~= nil, "ERROR: Cannot get property of card. Card name cannot be nil.")
+    assert(identifier ~= nil, "ERROR: Cannot get property of card. Identifier cannot be nil.")
+    if not cards[cardName] then return end
+
+    -- get property of the card
+    if cards[cardName][identifier] then
+        return cards[cardName][identifier]
+    end
+    -- get property of the card's types
+    if cards[cardName].type then
+        for _, type in ipairs(cards[cardName].type) do
+            if types[type] and types[type][identifier] then
+                return types[type][identifier]
+            end
+        end
+    end
+    -- get property of the card's attributes
+    for key, value in pairs(CARD_ATTRIBUTES) do
+        if cards[cardName][key] then
+            if value[identifier] then
+                return value[identifier]
+            end
+        end
+    end
+
+    return nil
+end
+
+-- takes out the next randomizer dominion card (skipping sideways)
+-- returns the card object dealt
+function dealRandomizerCard()
+    local zone = getObjectFromGUID(matsAndTokens["Randomizer Deck"] and matsAndTokens["Randomizer Deck"].guids and matsAndTokens["Randomizer Deck"].guids["Deck"] and matsAndTokens["Randomizer Deck"].guids["Deck"]["Zone"])
+    if not zone then return nil end
+    local deck = findDeck(zone)
+    if not deck then return nil end
+
+    if deck.type == "Card" then
+        if (not cards[deck.getName()]) or (cards[deck.getName()].class and hasValue(cards[deck.getName()].class, "Card")) then
+            return deck
+        end
+    elseif deck.type == "Deck" then
+        local index = nil
+        for _, card in ipairs(deck.getObjects()) do
+            if (not cards[card.name]) or (cards[card.name].class and hasValue(cards[card.name].class, "Card")) then
+                index = card.index
+                break
+            end
+        end
+        return deck.takeObject({index = index})
+    end
+
+    return nil
+end
+
+-- returns the table of all cards or decks in a zone
+function getAllCardsInZone(zone)
+    local objectsInZone = zone.getObjects()
+
+    local cardsFound = {}
+    for _, v in pairs(objectsInZone) do
+        if v.type == "Card" or v.type == "Deck" then
+            table.insert(cardsFound, v)
+        end
+    end
+
+    return cardsFound
+end
+
+-- finds the first deck or card found inside a zone prioritizing decks before cards
+function findDeck(zone)
+    local objectsInZone = zone.getObjects()
+    local deck = nil
+    -- get the first deck found
+    for _, o in pairs(objectsInZone) do
+        if o.type == "Deck" then
+            return o
+        end
+    end
+    -- if no deck was found get the first card found instead
+    for _, o in pairs(objectsInZone) do
+        if o.type == "Card" then
+            return o
+        end
+    end
+    -- if nothing was found return nil
+    return nil
+end
+
+-- takes a deck and sets it to a certain number of cards
+-- deck is a tts deck object (or card)
+-- size is a integer number of cards
+-- IMPORTANT: Making a deck larger only copies the front facing card of the deck
+--            Making a deck smaller only cuts the deck to the given size
+--            Use only for decks with a single type of card in them
+function setDeckSize(deck, size)
+    if not deck then return end
+    assert(type(size) == "number", "ERROR: Size must be an integer.")
+
+    if size <= 0 then
+        deck.destruct()
+        return nil
+    end
+
+    if deck.type == "Card" then
+        if size == 1 then return end
+
+        local data = deck.getData()
+        local deckData = {}
+        for i = 1, size do
+            table.insert(deckData, data)
+        end
+        local newDeck = spawnObjectData(getDeckDataTable(deckData))
+        newDeck.setPosition(deck.getPosition())
+        newDeck.setRotation(deck.getRotation())
+        newDeck.setLock(deck.getLock())
+        deck.destruct()
+        return newDeck
+    elseif deck.type == "Deck" then
+        local getObjects = deck.getObjects()
+        if size == #getObjects then
+            return deck
+        elseif size < #getObjects then
+            local result = deck.cut(#getObjects - size)
+            result[2].destruct()
+            local pos = result[1].getPosition()
+            pos.y = 1
+            result[1].setPosition(pos)
+        elseif size > #getObjects then
+            local deckData = deck.getData()
+            local cardData = deckData.ContainedObjects[#getObjects]
+            for i = 1, size - #getObjects do
+                table.insert(deckData.ContainedObjects, cardData)
+            end
+            local deckID = deckData.DeckIDs[#getObjects]
+            for i = 1, size - #getObjects do
+                table.insert(deckData.DeckIDs, deckID)
+            end
+            deck.destruct()
+            return spawnObjectData(deckData)
+        end
+    end
+end
+
+-- returns how many players are seated at colors used in this game
+function getSeatedPlayerCount()
+    local count = 0
+    -- count how many players are seated at actual player colors
+    for _, player in ipairs(Player.getPlayers()) do
+        if hasValue(players, player.color) then
+            count = count + 1
+        end
+    end
+
+    return count
+end
+
+-- creates and returns a Data table representing a new custom card
+-- data is a table with keys the same as the table returned by getData
+-- data at the very least should contain a CustomDeck and CardID
+function getCardData(data)
+    return {
+        GUID = data.GUID or "000000",
+        Name = data.Name or "Card",
+        Transform = {
+            posX = (data.Transform and data.Transform.posX) or 0,
+            posY = (data.Transform and data.Transform.posY) or 5,
+            posZ = (data.Transform and data.Transform.posZ) or 0,
+            rotX = (data.Transform and data.Transform.rotX) or 0,
+            rotY = (data.Transform and data.Transform.rotY) or 180,
+            rotZ = (data.Transform and data.Transform.rotZ) or 0,
+            scaleX = (data.Transform and data.Transform.scaleX) or 1.5,
+            scaleY = (data.Transform and data.Transform.scaleY) or 1,
+            scaleZ = (data.Transform and data.Transform.scaleZ) or 1.5
+        },
+        Nickname = data.Nickname or "",
+        Description = data.Description or "",
+        GMNotes = data.GMNotes or "",
+        ColorDiffuse = {
+            r = (data.ColorDiffuse and data.ColorDiffuse.r) or 0.7132353,
+            g = (data.ColorDiffuse and data.ColorDiffuse.g) or 0.7132353,
+            b = (data.ColorDiffuse and data.ColorDiffuse.b) or 0.7132353,
+            a = (data.ColorDiffuse and data.ColorDiffuse.a) or 1
+        },
+        LayoutGroupSortIndex = data.LayoutGroupSortIndex or 0,
+        Value = data.Value or 0,
+        Locked = data.Locked or false,
+        Grid = data.Grid or true,
+        Snap = data.Snap or true,
+        IgnoreFoW = data.IgnoreFoW or false,
+        MeasureMovement = data.MeasureMovement or false,
+        DragSelectable = data.DragSelectable or true,
+        Autoraise = data.Autoraise or true,
+        Sticky = data.Sticky or true,
+        Tooltip = data.Tooltip or true,
+        GridProjection = data.GridProjection or false,
+        HideWhenFaceDown = data.HideWhenFaceDown or true,
+        Hands = data.Hands or true,
+        CardID = data.CardID,
+        SidewaysCard = data.SidewaysCard or false,
+        CustomDeck = data.CustomDeck,
+        LuaScript = data.LuaScript or "",
+        LuaScriptState = data.LuaScriptState or "",
+        XmlUI = data.XmlUI or ""
+    }
+end
+
+-- takes a CustomDeck and position and returns data for a card
+function getCardDataCustomDeck(CustomDeck, position)
+    if not CustomDeck then return nil end
+    if not position or position > 99 or position < 0 then return nil end
+
+    local data = {}
+    data.CardID = 100 + position
+    data.CustomDeck = {
+        [1] = CustomDeck
+    }
+    return getCardData(data)
+end
+
+-- takes a name of a card and looks it up in the database to return a data table
+function getCardDataName(name)
+    if not (cards[name] and cards[name].sheet and cards[name].sheet.name and cards[name].sheet.position and CustomDecks[cards[name].sheet.name]) then return nil end
+
+    return getCardDataCustomDeck(CustomDecks[cards[name].sheet.name], cards[name].sheet.position)
+end
+
+-- creates and returns a Data table representing a new custom deck (see getCardData)
+-- data at the very least needs to contain CustomDeck, DeckIDs and ContainedObjects
+function getDeckData(data)
+    return {
+        GUID = data.GUID or "000000",
+        Name = data.Name or "Deck",
+        Transform = {
+            posX = (data.Transform and data.Transform.posX) or 0,
+            posY = (data.Transform and data.Transform.posY) or 5,
+            posZ = (data.Transform and data.Transform.posZ) or 0,
+            rotX = (data.Transform and data.Transform.rotX) or 0,
+            rotY = (data.Transform and data.Transform.rotY) or 180,
+            rotZ = (data.Transform and data.Transform.rotZ) or 0,
+            scaleX = (data.Transform and data.Transform.scaleX) or 1.5,
+            scaleY = (data.Transform and data.Transform.scaleY) or 1,
+            scaleZ = (data.Transform and data.Transform.scaleZ) or 1.5
+        },
+        Nickname = data.Nickname or "",
+        Description = data.Description or "",
+        GMNotes = data.GMNotes or "",
+        ColorDiffuse = {
+            r = (data.ColorDiffuse and data.ColorDiffuse.r) or 0.7132353,
+            g = (data.ColorDiffuse and data.ColorDiffuse.g) or 0.7132353,
+            b = (data.ColorDiffuse and data.ColorDiffuse.b) or 0.7132353,
+            a = (data.ColorDiffuse and data.ColorDiffuse.a) or 1
+        },
+        LayoutGroupSortIndex = data.LayoutGroupSortIndex or 0,
+        Value = data.Value or 0,
+        Locked = data.Locked or false,
+        Grid = data.Grid or true,
+        Snap = data.Snap or true,
+        IgnoreFoW = data.IgnoreFoW or false,
+        MeasureMovement = data.MeasureMovement or false,
+        DragSelectable = data.DragSelectable or true,
+        Autoraise = data.Autoraise or true,
+        Sticky = data.Sticky or true,
+        Tooltip = data.Tooltip or true,
+        GridProjection = data.GridProjection or false,
+        HideWhenFaceDown = data.HideWhenFaceDown or true,
+        Hands = data.Hands or false,
+        SidewaysCard = data.SidewaysCard or false,
+        DeckIDs = data.DeckIDs,
+        CustomDeck = data.CustomDeck,
+        LuaScript = data.LuaScript or "",
+        LuaScriptState = data.LuaScriptState or "",
+        XmlUI = data.XmlUI or "",
+        ContainedObjects = data.ContainedObjects
+    }
+end
+
+-- returns a deck data table using an array of card data tables
+function getDeckDataTable(cardData)
+    if not cardData then return nil end
+    if #cardData < 1 then return nil end
+    if #cardData < 2 then return cardData[1] end
+
+    local t = {}
+    t.DeckIDs = {}
+    t.CustomDeck = {}
+    t.ContainedObjects = cardData
+
+    -- get the custom decks
+    local customDeckIndex = 1
+    for _, data in ipairs(t.ContainedObjects) do
+        local deckID, customDeck = next(data.CustomDeck)
+        local foundDeckID = nil
+
+        for otherDeckID, otherCustomDeck in pairs(t.CustomDeck) do
+            if otherCustomDeck == customDeck then
+                foundDeckID = otherDeckID
+                needsNew = false
+                break
+            end
+        end
+
+        if not foundDeckID then
+            t.CustomDeck[customDeckIndex] = customDeck
+            foundDeckID = customDeckIndex
+            customDeckIndex = customDeckIndex + 1
+        end
+
+        data.CustomDeck = {
+            [foundDeckID] = t.CustomDeck[foundDeckID]
+        }
+        local pos = data.CardID - (math.floor(data.CardID / 100) * 100)
+        data.CardID = (foundDeckID * 100) + pos
+    end
+
+    -- get the deckIDs
+    for i, data in ipairs(t.ContainedObjects) do
+        t.DeckIDs[i] = data.CardID
+    end
+
+    return getDeckData(t)
+end
+
+-- returns a deck data table for a deck that has the cards in the card database for a table of given card names
+function getDeckDataNames(names)
+    if not names then return nil end
+    if #names < 1 then return nil end
+    if #names < 2 then return getCardDataName(names[1]) end
+    for _, name in ipairs(names) do
+        if not (cards[name] and cards[name].sheet and cards[name].sheet.name and cards[name].sheet.position and CustomDecks[cards[name].sheet.name]) then return nil end
+    end
+
+    local t = {}
+    for i, name in ipairs(names) do
+        t[i] = getCardDataName(name)
+    end
+
+    return getDeckDataTable(t)
+end
+
+spawnObjectDataOld = spawnObjectData
+spawnObjectData = function(data)
+    return spawnObjectDataOld({data = data})
+end
+
+-- converts three vectors into a transform table
+function getTransform(pos, rot, scale)
+    local transform = {}
+    transform.posX = (pos and pos.x) or 0
+    transform.posY = (pos and pos.y) or 1
+    transform.posZ = (pos and pos.z) or 0
+    transform.rotX = (rot and rot.x) or 0
+    transform.rotY = (rot and rot.y) or 0
+    transform.rotZ = (rot and rot.z) or 0
+    transform.scaleX = (scale and scale.x) or 1
+    transform.scaleY = (scale and scale.y) or 1
+    transform.scaleZ = (scale and scale.z) or 1
+    return transform
+end
+
+-- returns the first key found if a table has a value matching the given value and otherwise returns nil
+function hasValue(table, value)
+    for k, v in pairs(table) do
+        if v == value then return k end
+    end
+
+    -- nothing matching was found
+    return nil
+end
+
+-- returns the first key found if a table has a value matching any value in a given table and otherwise returns nil
+function hasValueTable(table, values)
+    for k, v in pairs(table) do
+        if hasValue(values, v) then return k end
+    end
+
+    -- nothing matching was found
+    return nil
+end
+
+-- shallowly compares two tables to see if they have the same values and keys
+-- returns true if they match
+function compareTables(a, b)
+    local stringA, stringB = "", ""
+    for _, value in pairs(a) do
+        stringA = stringA .. tostring(value)
+    end
+    for _, value in pairs(b) do
+        stringB = stringB .. tostring(value)
+    end
+    return stringA == stringB
+end
+
+-- returns the length of a table
+function getCount(table)
+    local count = 0
+    for _ in pairs(table) do
+        count = count + 1
+    end
+    return count
+end
+
+-- returns the sum of all values in a table (values must be numbers)
+function sumTable(table)
+    local result = 0
+
+    for k, v in pairs(table) do
+        result = result + v
+    end
+
+    return result
+end
+
+string.trim = function(s)
+   return string.gsub(s, "^%s*(.-)%s*$", "%1")
+end
+
+-- returns a shallow copy of the given table
+table.copy = function(table)
+    local t = {}
+    for k, v in pairs(table) do
+        t[k] = v
+    end
+    return t
+end
+
+-- filters a table's key/values by using a given function which should return true for key/values that are kept
+-- func is a funtion that takes the key, value, and the original table
+-- returns a table with original keys and values filtered
+table.filter = function(table, func)
+    local result = {}
+
+    for k, v in pairs(table) do
+        if func(v, k, table) then result[k] = v end
+    end
+
+    return result
+end
+
+-- filters a table's key/values by using a given function which should return true for key/values that are kept
+-- func is a funtion that takes the key, value, and the original table
+-- returns a table with indexes for keys and the original values filtered
+table.filterIndexed = function(table, func)
+    local result = {}
+
+    for k, v in pairs(table) do
+        if func(v, k, table) then table.insert(result, v) end
+    end
+
+    return result
+end
+
+set = {}
+set.mt = {}
+function set.new(array)
+    local t = {}
+    if array then
+        for _, v in ipairs(array) do
+            if v then
+                t[v] = true
+            end
+        end
+    end
+    setmetatable(t, set.mt)
+    return t
+end
+function set.insert(s, value)
+    s[value] = true
+end
+function set.toTable(s)
+    local t = {}
+    for k in pairs(s) do
+        t[#t + 1] = k
+    end
+    return t
+end
+function set.union(a, b)
+    if getmetatable(a) ~= set.mt or getmetatable(b) ~= set.mt then
+        error("attempt to `add' a set with a non-set value", 2)
+    end
+
+    local result = set.new()
+    for k in pairs(a) do result[k] = true end
+    for k in pairs(b) do result[k] = true end
+    return result
+end
+function set.difference(a, b)
+    if getmetatable(a) ~= set.mt or getmetatable(b) ~= set.mt then
+        error("attempt to `subtract' a set with a non-set value", 2)
+    end
+
+    local result = set.new()
+    for k in pairs(a) do
+        if not b[k] then
+            result[k] = true
+        end
+    end
+    return result
+end
+function set.intersection(a, b)
+    if getmetatable(a) ~= set.mt or getmetatable(b) ~= set.mt then
+        error("attempt to `multiply' a set with a non-set value", 2)
+    end
+
+    local result = set.new()
+    for k in pairs(a) do
+        if b[k] then
+            result[k] = true
+        end
+    end
+    return result
+end
+set.mt.__add = set.union
+set.mt.__sub = set.difference
+set.mt.__mul = set.intersection
+
+-- takes a table and applies a function to all of its leaf nodes
+-- if a value in the table is a table it will apply to function recursively to that table too
+-- if the parameter passed in is a value it will just return func(value)
+-- if the parameter passed in is a table it will return a table where all leaf nodes have had func applied to them
+-- func is passed the key and value
+function applyFunc(table, func)
+    local output = {}
+
+    if type(table) == "table" then
+        for k, v in pairs(table) do
+            if type(v) == "table" then
+                output[k] = applyFunc(v, func)
+            else
+                output[k] = func(k, v)
+            end
+        end
+    else
+        return func(nil, table)
+    end
+
+    return output
+end
+
+-- returns the first index found for a button that has a given label
+function getButtonIndex(label)
+    local buttons = objects["Button Zone"].getButtons()
+
+    for _, v in pairs(buttons) do
+        if v.label == label then return v.index end
+    end
+
+    return nil
+end
+
+-- applies takeObject to a deck or just moves its position and rotation if it has a remainder or if its just a card
+-- params is the table of parameters that takeObject uses (use GUID instead of index)
+function safeTakeObject(object, params)
+    local obj = nil
+    if object.type ~= "Deck" or object.remainder then
+        -- set the object in question to be the remainder
+        if object.remainder then obj = object.remainder else obj = object end
+        -- the object isn't even a deck so just move it using the transform functions
+        if params.guid == nil or obj.guid == params.guid then
+            -- check for rotation
+            if params.rotation then obj.setRotation(params.rotation) end
+            -- check for position
+            if params.position then
+                -- smooth move or set
+                if params.smooth ~= false then
+                    obj.setPositionSmooth(params.position, false, false)
+                else
+                    obj.setPosition(params.position)
+                end
+            end
+        end
+        -- takeObject is expected to return the object taken (but we aren't taking an object)
+        return obj
+    else
+        -- its a deck with no remainder so just do takeObject as normal
+        return object.takeObject(params)
+    end
+end

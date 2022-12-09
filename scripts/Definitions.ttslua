@@ -1,0 +1,200 @@
+#include !/DumbOnion/scripts/GUIDs.ttslua
+
+-- list of player colors in turn order
+players = {
+    "Yellow",
+    "Blue",
+    "Red",
+    "White",
+    "Green",
+    "Pink"
+}
+
+-- custom color values for player colors used to color the play area, etc
+customPlayerColors = {
+    White  = {195/255, 195/255, 195/255},
+    Red    = {204/255,  47/255,  47/255},
+    Green  = { 55/255, 174/255,  55/255},
+    Blue   = { 56/255,  56/255, 188/255},
+    Pink   = {235/255, 100/255, 235/255},
+    Yellow = {202/255, 202/255,  56/255}
+}
+
+-- list of functions that return a function customized for a button
+buttonFunctionPrototypes = {                                                                                            -- NEEDS TO BE REWORKED
+    shuffle = function(color)
+        return function(obj, player_clicker_color, alt_click)
+            if player_clicker_color == color then
+                shuffleDiscard(color)
+            else
+                printToColor("You can't click someone else's shuffle button.", player_clicker_color)
+            end
+        end
+    end,
+    validateAdmin = function(func)
+        return function(obj, player_clicker_color, alt_click)
+            if Player[player_clicker_color].admin == false then
+                printToColor("You cannot use this button because you are not an admin!", player_clicker_color)
+                return
+            end
+            func()
+        end
+    end,
+    gain = function()
+        return function(obj, player_clicker_color, alt_click)
+            local deck = findDeck(obj)
+            local position = objects.players[player_clicker_color].zones["Discard"].getPosition()
+            if deck then
+                safeTakeObject(deck, {
+                    position = position,
+                    rotation = vector(0, 180, 0),
+                    index = (deck.getQuantity() > 0 and deck.getQuantity() - 1) or 0
+                })
+            end
+        end
+    end
+}
+
+-- list of functions which return a table of parameters for a specific type of button
+buttonParamsPrototypes = {                                                                                              -- NEEDS TO BE REWORKED
+    shuffle = function(color)
+        local shuffleButtonPositions = {
+            ["Pink"]   = vector(-45.5, -3.9, 33.5),
+            ["Green"]  = vector(-27.4, -3.9, 33.5),
+            ["White"]  = vector(-9.3, -3.9, 33.5),
+            ["Red"]    = vector(8.9, -3.9, 33.5),
+            ["Blue"]   = vector(27, -3.9, 33.5),
+            ["Yellow"] = vector(45.2, -3.9, 33.5),
+        }
+        return {
+            click_function = "shuffle"..color.."Button",
+            label          = "Shuffle",
+            position       = shuffleButtonPositions[color],
+            width          = 1100,
+            height         = 600,
+            font_size      = 300
+        }
+    end,
+    dealRandomizer = function()
+        return {
+            click_function = "dealRandomizerButton",
+            label          = "Deal",
+            position       = {0, -3.9, 11},
+            width          = 2000,
+            height         = 800,
+            font_size      = 500,
+            tooltip        = "Put the randomizer cards you want to use into the above deck mat and hit deal."
+        }
+    end,
+    setup = function()
+        return {
+            click_function = "setupButton",
+            label          = "Complete Setup",
+            position       = {0, -3.9, 15},
+            width          = 4000,
+            height         = 1200,
+            font_size      = 500
+        }
+    end,
+    gain = function()
+        return {
+            click_function = "gain",
+            label          = "Gain",
+            color          = color(1, 1, 1, 0.1),
+            hover_color    = color(1, 1, 1, 1),
+            position       = vector(0, 0, 0.25),
+            rotation       = vector(0, 180, 0),
+            scale          = vector(0.5, 0.5, 0.33),
+            width          = 1500,
+            height         = 1000,
+            font_size      = 600
+        }
+    end,
+    endGame = function()
+        return {
+            click_function = "endGameButton",
+            label     = "End Game",
+            position  = {0, -3.9, -24},
+            width     = 2000,
+            height    = 1000,
+            font_size = 340,
+            tooltip   = "Ends the game causing scores to be calculated and all cards to be gathered into decks."
+        }
+    end
+}
+
+-- the table of values that should be saved for when the table is reloaded
+save = {}
+
+-- default save data
+defaultSave = {
+    debug = true,
+    buttons = {
+        [guids["Button Zone"]] = {
+            ["Shuffle Pink"] = {
+                index = 0,
+                params = buttonParamsPrototypes.shuffle("Pink")
+            },
+            ["Shuffle Green"] = {
+                index = 0,
+                params = buttonParamsPrototypes.shuffle("Green")
+            },
+            ["Shuffle White"] = {
+                index = 0,
+                params = buttonParamsPrototypes.shuffle("White")
+            },
+            ["Shuffle Red"] = {
+                index = 0,
+                params = buttonParamsPrototypes.shuffle("Red")
+            },
+            ["Shuffle Blue"] = {
+                index = 0,
+                params = buttonParamsPrototypes.shuffle("Blue")
+            },
+            ["Shuffle Yellow"] = {
+                index = 0,
+                params = buttonParamsPrototypes.shuffle("Yellow")
+            },
+            ["Deal Randomizer"] = {
+                index = 0,
+                params = buttonParamsPrototypes.dealRandomizer()
+            },
+            ["Complete Setup"] = {
+                index = 0,
+                params = buttonParamsPrototypes.setup()
+            }
+        }
+    },
+    turnsEnabled = false
+}
+
+#include !/DumbOnion/scripts/CardData.ttslua
+
+-- a table of all sprite sheets and info about them
+CustomDecks = {                                                                                                        -- UNFINISHED
+    ["Basics"] = {
+        FaceURL = "http://cloud-3.steamusercontent.com/ugc/936063271535495357/D6E8C0A5EC557F5FD577593359CC891AAAC0F128/",
+        BackURL = CARD_BACK_IMAGE,
+        NumWidth = 10,
+        NumHeight = 2,
+        BackIsHidden = true,
+        UniqueBack = false,
+        Type = 0
+    },
+    ["Dominion"] = {
+        FaceURL = "http://cloud-3.steamusercontent.com/ugc/936063271535497820/245F2C7B6369FA193DE460A9CD68DCFA96F645A1/",
+        BackURL = CARD_BACK_IMAGE,
+        NumWidth = 10,
+        NumHeight = 3,
+        BackIsHidden = true,
+        UniqueBack = false,
+        Type = 0
+    }
+}
+
+PREMADE_BOARDS = {
+    ["_Template"] = BoardSettings:New({kingdom = {}}),
+    ["First Game"] = BoardSettings:New({kingdom = {"Cellar", "Market", "Merchant", "Militia", "Mine", "Moat", "Remodel", "Smithy", "Village", "Workshop"}}),
+    ["Size Distortion"] = BoardSettings:New({kingdom ={"Artisan", "Bandit", "Bureaucrat", "Chapel", "Festival", "Gardens", "Sentry", "Throne Room", "Witch", "Workshop"}}),
+    ["Deck Top"] = BoardSettings:New({kingdom = {"Artisan", "Bureaucrat", "Council Room", "Festival", "Harbinger", "Laboratory", "Moneylender", "Sentry", "Vassal", "Village"}}),
+}
