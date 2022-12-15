@@ -1,5 +1,7 @@
 
+#include !/DumbOnion/scripts/Helpers.ttslua
 #include !/DumbOnion/scripts/PlayAreaColor.ttslua
+#include !/DumbOnion/scripts/AutoCleanup.ttslua
 
 --///////////////////////////////////////////////////////////////////////////////////////////////// DEFINITIONS
 
@@ -54,17 +56,7 @@ end
 
 function onPlayerTurn(current_player, previous_player)
     -- auto cleanup previous player
-    if (playArea and previous_player and previous_player.seated and playerDiscards[previous_player.color]) then
-        --[[local hitlist = Physics.cast({
-            origin = playArea.getPosition(),
-            direction = Vector(0, 1, 0),
-            type = 3,
-            size = playArea.getBoundsNormalized().size,
-            orientation = playArea.getRotation(),
-            max_distance = 1,
-            debug = true
-        })]]
-    end
+    AutoCleanup(previous_player, playArea, playerDecks, playerDiscards)
 
     -- set color of play area
     SetPlayAreaColor(playArea, playerAreas, current_player)

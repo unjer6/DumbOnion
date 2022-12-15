@@ -1,0 +1,74 @@
+
+table.filter = function (t, func)
+    local out = {}
+    for key, value in pairs(t) do
+        if (func(value, key)) then
+            out[key] = value
+        end
+    end
+    return out
+end
+
+table.filterIndexed = function (t, func)
+    local out = {}
+    for i=1, #t do
+        if (func(t[i], i)) then
+            table.insert(out, t[i])
+        end
+    end
+    return out
+end
+
+table.map = function (t, func)
+    local out = {}
+    for key, value in pairs(t) do
+        out[key] = func(value, key)
+    end
+    return out
+end
+
+function GetObjectsAbove(object, distance, xPadding, zPadding, debug)
+    -- default values
+    if (distance == nil) then distance = 1 end
+    if (xPadding == nil) then xPadding = 0 end
+    if (zPadding == nil) then zPadding = 0 end
+    if (debug == nil) then debug = false end
+
+    local size = object.getBoundsNormalized().size
+    size.y = 0.01
+    size.x = size.x - (2 * xPadding)
+    size.z = size.z - (2 * zPadding)
+
+    if (size.x <= 0 or size.z <= 0) then
+        log("WARNING: Raycast padding larger than size of object.")
+        return
+    end
+
+    local hitlist = Physics.cast({
+        origin = object.getPosition(),
+        direction = Vector(0, 1, 0),
+        type = 3,
+        size = size,
+        orientation = object.getRotation(),
+        max_distance = distance,
+        debug = debug
+    })
+
+    return table.map(hitlist, function(value) return value.hit_object end)
+end
+
+function GetCardsAbove(object, distance, xPadding, zPadding, debug)
+    return table.filterIndexed(GetObjectsAbove(object, distance, xPadding, zPadding, debug), function (object) return object.type == "Card" or object.type == "Deck" end)
+end
+
+function CoroutineYieldUntil(func, timeout, timeoutFunc)
+    local startTime = Time.time
+
+    while(not func()) do
+        if (timeout ~= nil and Time.time - startTime > timeout) then
+            if (timeoutFunc) then timeoutFunc() end
+            break
+        end
+        coroutine.yield(0)
+    end
+end
