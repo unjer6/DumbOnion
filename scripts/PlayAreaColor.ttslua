@@ -1,9 +1,25 @@
 
 defaultPlayAreaColor = Color(100/255, 100/255, 100/255)
 
-function SetPlayAreaColor(playArea, playerAreas, current_player)
+function SetPlayAreaColor(playerColor)
+    local playArea = GetFirstObjectWithTag("Play Area")
+    local playerArea = GetFirstObjectWithAllTags({"Player Area", playerColor})
+
     if (playArea) then
-        if (current_player and playerAreas[current_player.color]) then playArea.setColorTint(playerAreas[current_player.color].getColorTint())
-        else                                                           playArea.setColorTint(defaultPlayAreaColor) end
+        if (playerArea) then
+            -- use the color of the matching player area
+            playArea.setColorTint(playerArea.getColorTint())
+        else
+            -- use TTS defined color
+            playArea.setColorTint(playerColor)
+        end
+    end
+end
+
+function SetPlayAreaDefaultColor()
+    local playArea = GetFirstObjectWithTag("Play Area")
+
+    if (playArea) then
+        playArea.setColorTint(defaultPlayAreaColor)
     end
 end

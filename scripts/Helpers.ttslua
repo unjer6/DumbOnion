@@ -27,6 +27,14 @@ table.map = function (t, func)
     return out
 end
 
+function GetFirstObjectWithTag(tag)
+    return getObjectsWithTag(tag)[1]
+end
+
+function GetFirstObjectWithAllTags(tags)
+    return getObjectsWithAllTags(tags)[1]
+end
+
 function GetObjectsAbove(object, distance, xPadding, zPadding, debug)
     -- default values
     if (distance == nil) then distance = 1 end

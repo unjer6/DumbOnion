@@ -1,7 +1,7 @@
 {
   "SaveName": "DumbOnion",
-  "EpochTime": 1671144325,
-  "Date": "12/15/2022 5:45:25 PM",
+  "EpochTime": 1671172347,
+  "Date": "12/16/2022 1:32:27 AM",
   "VersionNumber": "v13.2.2",
   "GameMode": "Dominion",
   "GameType": "Game",
@@ -257,6 +257,10 @@
       {
         "displayed": "Discard",
         "normalized": "discard"
+      },
+      {
+        "displayed": "Uninteractable",
+        "normalized": "uninteractable"
       }
     ]
   },
@@ -278,7 +282,7 @@
     "TurnColor": ""
   },
   "DecalPallet": [],
-  "LuaScript": "--[[ READ ME. Go to https://github.com/unjer6/DumbOnion ]]\n\n----#include !/DumbOnion/scripts/Global.ttslua\n\n----#include !/DumbOnion/scripts/Helpers.ttslua\n\r\ntable.filter = function (t, func)\r\n    local out = {}\r\n    for key, value in pairs(t) do\r\n        if (func(value, key)) then\r\n            out[key] = value\r\n        end\r\n    end\r\n    return out\r\nend\r\n\r\ntable.filterIndexed = function (t, func)\r\n    local out = {}\r\n    for i=1, #t do\r\n        if (func(t[i], i)) then\r\n            table.insert(out, t[i])\r\n        end\r\n    end\r\n    return out\r\nend\r\n\r\ntable.map = function (t, func)\r\n    local out = {}\r\n    for key, value in pairs(t) do\r\n        out[key] = func(value, key)\r\n    end\r\n    return out\r\nend\r\n\r\nfunction GetObjectsAbove(object, distance, xPadding, zPadding, debug)\r\n    -- default values\r\n    if (distance == nil) then distance = 1 end\r\n    if (xPadding == nil) then xPadding = 0 end\r\n    if (zPadding == nil) then zPadding = 0 end\r\n    if (debug == nil) then debug = false end\r\n\r\n    local size = object.getBoundsNormalized().size\r\n    size.y = 0.01\r\n    size.x = size.x - (2 * xPadding)\r\n    size.z = size.z - (2 * zPadding)\r\n\r\n    if (size.x <= 0 or size.z <= 0) then\r\n        log(\"WARNING: Raycast padding larger than size of object.\")\r\n        return\r\n    end\r\n\r\n    local hitlist = Physics.cast({\r\n        origin = object.getPosition(),\r\n        direction = Vector(0, 1, 0),\r\n        type = 3,\r\n        size = size,\r\n        orientation = object.getRotation(),\r\n        max_distance = distance,\r\n        debug = debug\r\n    })\r\n\r\n    return table.map(hitlist, function(value) return value.hit_object end)\r\nend\r\n\r\nfunction GetCardsAbove(object, distance, xPadding, zPadding, debug)\r\n    return table.filterIndexed(GetObjectsAbove(object, distance, xPadding, zPadding, debug), function (object) return object.type == \"Card\" or object.type == \"Deck\" end)\r\nend\r\n\r\nfunction CoroutineYieldUntil(func, timeout, timeoutFunc)\r\n    local startTime = Time.time\r\n\r\n    while(not func()) do\r\n        if (timeout ~= nil and Time.time - startTime > timeout) then\r\n            if (timeoutFunc) then timeoutFunc() end\r\n            break\r\n        end\r\n        coroutine.yield(0)\r\n    end\r\nend\r\n\n----#include !/DumbOnion/scripts/Helpers.ttslua\n----#include !/DumbOnion/scripts/PlayAreaColor.ttslua\n\r\ndefaultPlayAreaColor = Color(100/255, 100/255, 100/255)\r\n\r\nfunction SetPlayAreaColor(playArea, playerAreas, current_player)\r\n    if (playArea) then\r\n        if (current_player and playerAreas[current_player.color]) then playArea.setColorTint(playerAreas[current_player.color].getColorTint())\r\n        else                                                           playArea.setColorTint(defaultPlayAreaColor) end\r\n    end\r\nend\r\n\n----#include !/DumbOnion/scripts/PlayAreaColor.ttslua\n----#include !/DumbOnion/scripts/AutoCleanup.ttslua\n\r\nfunction AutoCleanup(player, playArea, playerDecks, playerDiscards)\r\n    function CleanupCoroutine()\r\n        CleanupDiscardFromHand(player, playerDiscards)\r\n        local discardedCardsFromPlay = CleanupDiscardFromPlay(player, playArea, playerDiscards)\r\n\r\n        -- wait for cards being discarded to finish moving to discard pile\r\n        CoroutineYieldUntil(\r\n            function()\r\n                for _, obj in pairs(discardedCardsFromPlay) do\r\n                    if (not obj.isDestroyed() and obj.isSmoothMoving()) then\r\n                        return false\r\n                    end\r\n                end\r\n\r\n                return true\r\n            end, 5)\r\n\r\n        -- wait for discard pile to settle\r\n        if (playerDiscards[player.color]) then\r\n            CoroutineYieldUntil(\r\n                function()\r\n                    local cardsFarAboveDiscard = GetCardsAbove(playerDiscards[player.color], 5)\r\n                    local cardsInDiscard = GetCardsAbove(playerDiscards[player.color], 0.5)\r\n                    return (#cardsInDiscard == 1 and #cardsFarAboveDiscard == 1 and cardsInDiscard[1].resting) or #cardsFarAboveDiscard == 0\r\n                end, 5)\r\n        end\r\n\r\n        -- wait just to make the animation more pleasing\r\n        for i=1,5 do\r\n            coroutine.yield(0)\r\n        end\r\n\r\n        local amountDealt = CleanupDrawHand(player, playerDecks, 5)\r\n\r\n        -- wait just to make the animation more pleasing\r\n        for i=1,15 do\r\n            coroutine.yield(0)\r\n        end\r\n\r\n        if (amountDealt < 5) then\r\n            CleanupShuffleDiscard(player, playerDecks, playerDiscards)\r\n            -- wait for draw pile to settle\r\n            if (playerDecks[player.color]) then\r\n                CoroutineYieldUntil(\r\n                    function()\r\n                        local cardsFarAboveDeck = GetCardsAbove(playerDecks[player.color], 5)\r\n                        local cardsInDeck = GetCardsAbove(playerDecks[player.color], 0.5)\r\n                        return (#cardsInDeck == 1 and #cardsFarAboveDeck == 1 and cardsInDeck[1].resting) or #cardsFarAboveDeck == 0\r\n                    end, 5)\r\n            end\r\n            CleanupDrawHand(player, playerDecks, 5 - amountDealt)\r\n        end\r\n\r\n        return 1\r\n    end\r\n\r\n    if (player and player.seated) then\r\n        startLuaCoroutine(self, \"CleanupCoroutine\")\r\n    end\r\nend\r\n\r\nfunction CleanupDiscardFromHand(player, playerDiscards)\r\n    if (playerDiscards[player.color]) then\r\n        local cardsInHand = player.getHandObjects(1)\r\n        cardsInHand = table.filterIndexed(cardsInHand, function (obj) return obj.type == \"Card\" end)\r\n        for _, card in pairs(cardsInHand) do\r\n            card.setPosition(playerDiscards[player.color].getPosition() + Vector(0,2,0))\r\n        end\r\n    end\r\nend\r\n\r\n-- Returns a list of cards discarded from play (for tracking purposes)\r\nfunction CleanupDiscardFromPlay(player, playArea, playerDiscards)\r\n    local outDiscardedCards = {}\r\n\r\n    if (playArea and playerDiscards[player.color]) then\r\n        local cardsInPlay = GetCardsAbove(playArea)\r\n        cardsInPlay = table.filterIndexed(cardsInPlay, function (card) return not (card.locked or card.held_by_color or not card.interactable) end)\r\n        for _, obj in pairs(cardsInPlay) do\r\n            obj.setRotation(Vector(0, 180, 0))\r\n            obj.setPositionSmooth(playerDiscards[player.color].getPosition() + Vector(0,2,0), false, true)\r\n            table.insert(outDiscardedCards, obj)\r\n        end\r\n    end\r\n\r\n    return outDiscardedCards\r\nend\r\n\r\n-- Returns how many cards were successfully dealt\r\nfunction CleanupDrawHand(player, playerDecks, amount)\r\n    if (playerDecks[player.color]) then\r\n        local deck = GetCardsAbove(playerDecks[player.color])[1]\r\n        if (deck) then\r\n            local amountToDeal = math.min(deck.getQuantity(), amount)\r\n            if (deck.type == \"Card\") then\r\n                amountToDeal = 1\r\n            end\r\n            deck.deal(amountToDeal, player.color)\r\n            return amountToDeal\r\n        end\r\n    end\r\n\r\n    return 0\r\nend\r\n\r\nfunction CleanupShuffleDiscard(player, playerDecks, playerDiscards)\r\n    if (playerDecks[player.color] and playerDiscards[player.color]) then\r\n        local discard = GetCardsAbove(playerDiscards[player.color])[1]\r\n        if (discard) then\r\n            discard.setRotation(Vector(0, 180, 180))\r\n            discard.setPosition(playerDecks[player.color].getPosition() + Vector(0,2,0))\r\n            discard.shuffle()\r\n        end\r\n    end\r\nend\r\n\n----#include !/DumbOnion/scripts/AutoCleanup.ttslua\n\n--///////////////////////////////////////////////////////////////////////////////////////////////// DEFINITIONS\n\nturnOrder = {\n    \"Yellow\",\n    \"Blue\",\n    \"Red\",\n    \"White\",\n    \"Green\",\n    \"Pink\"\n}\n\n--///////////////////////////////////////////////////////////////////////////////////////////////// DECLARATIONS\n\nplayArea = nil\nplayerAreas = {\n    [\"Yellow\"] = nil,\n    [\"Blue\"] = nil,\n    [\"Red\"] = nil,\n    [\"White\"] = nil,\n    [\"Green\"] = nil,\n    [\"Pink\"] = nil\n}\nplayerDecks = {\n    [\"Yellow\"] = nil,\n    [\"Blue\"] = nil,\n    [\"Red\"] = nil,\n    [\"White\"] = nil,\n    [\"Green\"] = nil,\n    [\"Pink\"] = nil\n}\nplayerDiscards = {\n    [\"Yellow\"] = nil,\n    [\"Blue\"] = nil,\n    [\"Red\"] = nil,\n    [\"White\"] = nil,\n    [\"Green\"] = nil,\n    [\"Pink\"] = nil\n}\n\n--///////////////////////////////////////////////////////////////////////////////////////////////// EVENTS\n\nfunction onLoad(saveString)\n    SetDeclarations()\n\n    -- spawn UI\nend\n\nfunction onSave()\n    return \"\"\nend\n\nfunction onPlayerTurn(current_player, previous_player)\n    -- auto cleanup previous player\n    AutoCleanup(previous_player, playArea, playerDecks, playerDiscards)\n\n    -- set color of play area\n    SetPlayAreaColor(playArea, playerAreas, current_player)\nend\n\nfunction onChat(message, player)\n    -- handle chat commands\nend\n\n--///////////////////////////////////////////////////////////////////////////////////////////////// METHODS\n\nfunction SetDeclarations()\n    -- find objects by tag\n    playArea = getObjectsWithTag(\"Play Area\")[1]\n    for _, c in pairs(turnOrder) do\n        playerAreas[c] = getObjectsWithAllTags({\"Player Area\", c})[1]\n        playerDecks[c] = getObjectsWithAllTags({\"Deck\", c})[1]\n        playerDiscards[c] = getObjectsWithAllTags({\"Discard\", c})[1]\n    end\nend\n\n----#include !/DumbOnion/scripts/Global.ttslua",
+  "LuaScript": "--[[ READ ME. Go to https://github.com/unjer6/DumbOnion ]]\n\n----#include !/DumbOnion/scripts/Global.ttslua\n\n----#include !/DumbOnion/scripts/Helpers.ttslua\n\r\ntable.filter = function (t, func)\r\n    local out = {}\r\n    for key, value in pairs(t) do\r\n        if (func(value, key)) then\r\n            out[key] = value\r\n        end\r\n    end\r\n    return out\r\nend\r\n\r\ntable.filterIndexed = function (t, func)\r\n    local out = {}\r\n    for i=1, #t do\r\n        if (func(t[i], i)) then\r\n            table.insert(out, t[i])\r\n        end\r\n    end\r\n    return out\r\nend\r\n\r\ntable.map = function (t, func)\r\n    local out = {}\r\n    for key, value in pairs(t) do\r\n        out[key] = func(value, key)\r\n    end\r\n    return out\r\nend\r\n\r\nfunction GetFirstObjectWithTag(tag)\r\n    return getObjectsWithTag(tag)[1]\r\nend\r\n\r\nfunction GetFirstObjectWithAllTags(tags)\r\n    return getObjectsWithAllTags(tags)[1]\r\nend\r\n\r\nfunction GetObjectsAbove(object, distance, xPadding, zPadding, debug)\r\n    -- default values\r\n    if (distance == nil) then distance = 1 end\r\n    if (xPadding == nil) then xPadding = 0 end\r\n    if (zPadding == nil) then zPadding = 0 end\r\n    if (debug == nil) then debug = false end\r\n\r\n    local size = object.getBoundsNormalized().size\r\n    size.y = 0.01\r\n    size.x = size.x - (2 * xPadding)\r\n    size.z = size.z - (2 * zPadding)\r\n\r\n    if (size.x <= 0 or size.z <= 0) then\r\n        log(\"WARNING: Raycast padding larger than size of object.\")\r\n        return\r\n    end\r\n\r\n    local hitlist = Physics.cast({\r\n        origin = object.getPosition(),\r\n        direction = Vector(0, 1, 0),\r\n        type = 3,\r\n        size = size,\r\n        orientation = object.getRotation(),\r\n        max_distance = distance,\r\n        debug = debug\r\n    })\r\n\r\n    return table.map(hitlist, function(value) return value.hit_object end)\r\nend\r\n\r\nfunction GetCardsAbove(object, distance, xPadding, zPadding, debug)\r\n    return table.filterIndexed(GetObjectsAbove(object, distance, xPadding, zPadding, debug), function (object) return object.type == \"Card\" or object.type == \"Deck\" end)\r\nend\r\n\r\nfunction CoroutineYieldUntil(func, timeout, timeoutFunc)\r\n    local startTime = Time.time\r\n\r\n    while(not func()) do\r\n        if (timeout ~= nil and Time.time - startTime > timeout) then\r\n            if (timeoutFunc) then timeoutFunc() end\r\n            break\r\n        end\r\n        coroutine.yield(0)\r\n    end\r\nend\r\n\n----#include !/DumbOnion/scripts/Helpers.ttslua\n----#include !/DumbOnion/scripts/PlayAreaColor.ttslua\n\r\ndefaultPlayAreaColor = Color(100/255, 100/255, 100/255)\r\n\r\nfunction SetPlayAreaColor(playerColor)\r\n    local playArea = GetFirstObjectWithTag(\"Play Area\")\r\n    local playerArea = GetFirstObjectWithAllTags({\"Player Area\", playerColor})\r\n\r\n    if (playArea) then\r\n        if (playerArea) then\r\n            -- use the color of the matching player area\r\n            playArea.setColorTint(playerArea.getColorTint())\r\n        else\r\n            -- use TTS defined color\r\n            playArea.setColorTint(playerColor)\r\n        end\r\n    end\r\nend\r\n\r\nfunction SetPlayAreaDefaultColor()\r\n    local playArea = GetFirstObjectWithTag(\"Play Area\")\r\n\r\n    if (playArea) then\r\n        playArea.setColorTint(defaultPlayAreaColor)\r\n    end\r\nend\r\n\n----#include !/DumbOnion/scripts/PlayAreaColor.ttslua\n----#include !/DumbOnion/scripts/AutoCleanup.ttslua\n\r\nfunction AutoCleanup(player)\r\n    function CleanupCoroutine()\r\n        local playArea = GetFirstObjectWithTag(\"Play Area\")\r\n        local deck = GetFirstObjectWithAllTags({\"Deck\", player.color})\r\n        local discard = GetFirstObjectWithAllTags({\"Discard\", player.color})\r\n\r\n        local discardedCardsFromPlay = CleanupUtils.DiscardFromPlay(playArea, discard)\r\n        CleanupUtils.DiscardHand(player, discard)\r\n\r\n        -- wait for cards being discarded to finish moving to discard pile\r\n        CoroutineYieldUntil(\r\n            function()\r\n                for _, obj in pairs(discardedCardsFromPlay) do\r\n                    if (not obj.isDestroyed() and obj.isSmoothMoving()) then\r\n                        return false\r\n                    end\r\n                end\r\n\r\n                return true\r\n            end, 5)\r\n\r\n        -- wait for discard pile to settle\r\n        CleanupUtils.CoroutineYieldUntilPileSettled(discard)\r\n\r\n        local amountDealt = CleanupUtils.DrawHand(player, deck, 5)\r\n\r\n        if (amountDealt < 5) then\r\n            -- wait just to make the animation more pleasing\r\n            if (amountDealt > 0) then\r\n                for i=1,20 do\r\n                    coroutine.yield(0)\r\n                end\r\n            end\r\n\r\n            CleanupUtils.ShuffleDiscard(deck, discard)\r\n            -- wait for draw pile to settle\r\n            CleanupUtils.CoroutineYieldUntilPileSettled(deck)\r\n            CleanupUtils.DrawHand(player, deck, 5 - amountDealt)\r\n        end\r\n\r\n        return 1\r\n    end\r\n\r\n    if (player.seated) then\r\n        startLuaCoroutine(self, \"CleanupCoroutine\")\r\n    end\r\nend\r\n\r\n-- ///////////////////////////////////////////////////////////////////////////////// Cleanup steps\r\n\r\nCleanupUtils = {}\r\n\r\n-- Returns a list of cards discarded from play (for tracking purposes)\r\nCleanupUtils.DiscardFromPlay = function(playArea, discard)\r\n    local outDiscardedCards = {}\r\n\r\n    if (playArea and discard) then\r\n        local cardsInPlay = GetCardsAbove(playArea)\r\n        cardsInPlay = table.filterIndexed(cardsInPlay, function (card) return not (card.locked or card.held_by_color or not card.interactable) end)\r\n        for _, card in pairs(cardsInPlay) do\r\n            card.setRotation(Vector(0, 180, 0))\r\n            card.setPositionSmooth(discard.getPosition() + Vector(0,2,0), false, true)\r\n            table.insert(outDiscardedCards, card)\r\n        end\r\n    end\r\n\r\n    return outDiscardedCards\r\nend\r\n\r\nCleanupUtils.DiscardHand = function(player, discard)\r\n    local cardsInHand = player.getHandObjects(1)\r\n    cardsInHand = table.filterIndexed(cardsInHand, function (obj) return obj.type == \"Card\" end)\r\n\r\n    if (discard) then\r\n        for _, card in pairs(cardsInHand) do\r\n            card.setPosition(discard.getPosition() + Vector(0,2,0))\r\n        end\r\n    end\r\nend\r\n\r\n-- Returns how many cards were successfully dealt\r\nCleanupUtils.DrawHand = function(player, deck, amount)\r\n    if (deck) then\r\n        local cardsInDeck = GetCardsAbove(deck)[1]\r\n        if (cardsInDeck) then\r\n            local amountToDeal = math.min(cardsInDeck.getQuantity(), amount)\r\n            if (cardsInDeck.type == \"Card\") then\r\n                amountToDeal = 1\r\n            end\r\n            cardsInDeck.deal(amountToDeal, player.color)\r\n            return amountToDeal\r\n        end\r\n    end\r\n\r\n    return 0\r\nend\r\n\r\nCleanupUtils.ShuffleDiscard = function(deck, discard)\r\n    if (deck and discard) then\r\n        local cardsInDiscard = GetCardsAbove(discard)[1]\r\n        if (cardsInDiscard) then\r\n            cardsInDiscard.setRotation(Vector(0, 180, 180))\r\n            cardsInDiscard.setPosition(deck.getPosition() + Vector(0,2,0))\r\n            cardsInDiscard.shuffle()\r\n        end\r\n    end\r\nend\r\n\r\nCleanupUtils.CoroutineYieldUntilPileSettled = function(pile)\r\n    CoroutineYieldUntil(\r\n        function()\r\n            if (pile) then\r\n                local cardsFarAbove = GetCardsAbove(pile, 5)\r\n                local cardsIn = GetCardsAbove(pile, 0.5)\r\n                return (#cardsIn == 1 and #cardsFarAbove == 1 and cardsIn[1].getVelocity():magnitude() < 0.01) or #cardsFarAbove == 0\r\n            end\r\n            return true\r\n        end, 5)\r\nend\r\n\n----#include !/DumbOnion/scripts/AutoCleanup.ttslua\n\n--///////////////////////////////////////////////////////////////////////////////////////////////// DEFINITIONS\n\nturnOrder = {\n    \"Yellow\",\n    \"Blue\",\n    \"Red\",\n    \"White\",\n    \"Green\",\n    \"Pink\"\n}\n\n--///////////////////////////////////////////////////////////////////////////////////////////////// DECLARATIONS\n\nplayArea = nil\nplayerAreas = {\n    [\"Yellow\"] = nil,\n    [\"Blue\"] = nil,\n    [\"Red\"] = nil,\n    [\"White\"] = nil,\n    [\"Green\"] = nil,\n    [\"Pink\"] = nil\n}\nplayerDecks = {\n    [\"Yellow\"] = nil,\n    [\"Blue\"] = nil,\n    [\"Red\"] = nil,\n    [\"White\"] = nil,\n    [\"Green\"] = nil,\n    [\"Pink\"] = nil\n}\nplayerDiscards = {\n    [\"Yellow\"] = nil,\n    [\"Blue\"] = nil,\n    [\"Red\"] = nil,\n    [\"White\"] = nil,\n    [\"Green\"] = nil,\n    [\"Pink\"] = nil\n}\n\n--///////////////////////////////////////////////////////////////////////////////////////////////// EVENTS\n\nfunction onLoad(saveString)\n    -- get object bindings\n    SetDeclarations()\n\n    -- set all uninteractable objects to be uninteractable\n    local unintObjs = getObjectsWithTag(\"Uninteractable\")\n    for _, obj in pairs(unintObjs) do\n        obj.interactable = false\n    end\n\n    -- spawn UI\n\n    -- add hotkeys\n    AddHotkeys()\nend\n\nfunction onSave()\n    return \"\"\nend\n\nfunction onPlayerTurn(current_player, previous_player)\n    -- auto cleanup previous player\n    if (previous_player) then\n        AutoCleanup(previous_player)\n    end\n\n    -- set color of play area\n    if (current_player) then\n        SetPlayAreaColor(current_player.color)\n    else\n        SetPlayAreaDefaultColor()\n    end\nend\n\nfunction onChat(message, player)\n    -- handle chat commands\nend\n\n--///////////////////////////////////////////////////////////////////////////////////////////////// METHODS\n\nfunction SetDeclarations()\n    -- find objects by tag\n    playArea = GetFirstObjectWithTag(\"Play Area\")\n    for _, c in pairs(turnOrder) do\n        playerAreas[c] = GetFirstObjectWithAllTags({\"Player Area\", c})\n        playerDecks[c] = GetFirstObjectWithAllTags({\"Deck\", c})\n        playerDiscards[c] = GetFirstObjectWithAllTags({\"Discard\", c})\n    end\nend\n\nfunction AddHotkeys()\n    addHotkey(\"Toggle All Interactable\",\n        function(playerColor, hoveredObject)\n            -- turn playerColor into player instance\n            local player = Player[playerColor]\n            if (player.admin) then\n                local objs = getObjectsWithTag(\"Uninteractable\")\n                for _, obj in pairs(objs) do\n                    obj.interactable = true\n                end\n                broadcastToColor(\"All uninteractable objects set to interactable. They will be set back to uninteractable the next time the save is loaded.\", playerColor, \"Blue\")\n            end\n        end)\nend\n\n----#include !/DumbOnion/scripts/Global.ttslua",
   "LuaScriptState": "",
   "XmlUI": "<!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->",
   "ObjectStates": [
@@ -305,12 +309,13 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.39215678,
-        "g": 0.39215678,
-        "b": 0.39215678
+        "r": 0.39215672,
+        "g": 0.39215672,
+        "b": 0.39215672
       },
       "Tags": [
-        "Play Area"
+        "Play Area",
+        "Uninteractable"
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -353,13 +358,14 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.21568206,
+        "r": 0.215682,
         "g": 0.68235296,
-        "b": 0.21568206
+        "b": 0.215682
       },
       "Tags": [
         "Green",
-        "Player Area"
+        "Player Area",
+        "Uninteractable"
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -408,6 +414,7 @@
       },
       "Tags": [
         "Player Area",
+        "Uninteractable",
         "White"
       ],
       "LayoutGroupSortIndex": 0,
@@ -452,12 +459,13 @@
       },
       "ColorDiffuse": {
         "r": 0.8,
-        "g": 0.184309751,
-        "b": 0.184309751
+        "g": 0.184309691,
+        "b": 0.184309691
       },
       "Tags": [
         "Player Area",
-        "Red"
+        "Red",
+        "Uninteractable"
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -501,12 +509,13 @@
       },
       "ColorDiffuse": {
         "r": 0.921568632,
-        "g": 0.3921527,
+        "g": 0.392152637,
         "b": 0.921568632
       },
       "Tags": [
         "Pink",
-        "Player Area"
+        "Player Area",
+        "Uninteractable"
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -551,10 +560,11 @@
       "ColorDiffuse": {
         "r": 0.876306653,
         "g": 0.8677371,
-        "b": 0.233579576
+        "b": 0.233579516
       },
       "Tags": [
         "Player Area",
+        "Uninteractable",
         "Yellow"
       ],
       "LayoutGroupSortIndex": 0,
@@ -598,13 +608,14 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.219603658,
-        "g": 0.219603658,
+        "r": 0.2196036,
+        "g": 0.2196036,
         "b": 0.737255
       },
       "Tags": [
         "Blue",
-        "Player Area"
+        "Player Area",
+        "Uninteractable"
       ],
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -992,9 +1003,9 @@
         "posX": 7.23061752,
         "posY": 0.9677937,
         "posZ": 13.3518009,
-        "rotX": -2.05670062E-07,
+        "rotX": -2.05670119E-07,
         "rotY": 359.9732,
-        "rotZ": -3.33053947E-07,
+        "rotZ": -3.33054061E-07,
         "scaleX": 0.35,
         "scaleY": 0.02,
         "scaleZ": 0.35
@@ -1150,9 +1161,9 @@
         "posX": 3.62536836,
         "posY": 0.9677937,
         "posZ": 13.3518009,
-        "rotX": -2.91721733E-07,
+        "rotX": -2.91721847E-07,
         "rotY": 359.9732,
-        "rotZ": -3.05143828E-07,
+        "rotZ": -3.05143942E-07,
         "scaleX": 0.35,
         "scaleY": 0.02,
         "scaleZ": 0.35
@@ -1229,9 +1240,9 @@
         "posX": 7.230618,
         "posY": 0.9677937,
         "posZ": 8.217943,
-        "rotX": 6.153653E-08,
+        "rotX": 6.153656E-08,
         "rotY": 359.9732,
-        "rotZ": 1.225227E-07,
+        "rotZ": 1.22522763E-07,
         "scaleX": 0.35,
         "scaleY": 0.02,
         "scaleZ": 0.35
@@ -1310,7 +1321,7 @@
         "posZ": 8.217941,
         "rotX": -4.01290627E-08,
         "rotY": 359.9732,
-        "rotZ": 8.097304E-09,
+        "rotZ": 8.097308E-09,
         "scaleX": 0.35,
         "scaleY": 0.02,
         "scaleZ": 0.35
@@ -1389,7 +1400,7 @@
         "posZ": 13.3518,
         "rotX": -1.56016952E-07,
         "rotY": 359.9732,
-        "rotZ": -2.19283265E-07,
+        "rotZ": -2.19283365E-07,
         "scaleX": 0.35,
         "scaleY": 0.02,
         "scaleZ": 0.35
@@ -1466,9 +1477,9 @@
         "posX": 0.020119682,
         "posY": 0.9677937,
         "posZ": 8.217941,
-        "rotX": 6.811326E-08,
+        "rotX": 6.811329E-08,
         "rotY": 359.9732,
-        "rotZ": 1.54903617E-07,
+        "rotZ": 1.54903674E-07,
         "scaleX": 0.35,
         "scaleY": 0.02,
         "scaleZ": 0.35
@@ -1545,9 +1556,9 @@
         "posX": -3.58513021,
         "posY": 0.9677937,
         "posZ": 8.217941,
-        "rotX": 6.569556E-08,
+        "rotX": 6.569559E-08,
         "rotY": 359.9732,
-        "rotZ": 1.46990526E-08,
+        "rotZ": 1.46990589E-08,
         "scaleX": 0.35,
         "scaleY": 0.02,
         "scaleZ": 0.35
@@ -2746,9 +2757,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.1724734,
-        "g": 0.1724734,
-        "b": 0.1724734
+        "r": 0.172473341,
+        "g": 0.172473341,
+        "b": 0.172473341
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -2775,9 +2786,9 @@
         "posX": 72.17598,
         "posY": 0.483727574,
         "posZ": 22.8393,
-        "rotX": -3.314149E-06,
+        "rotX": -3.31415276E-06,
         "rotY": 179.9658,
-        "rotZ": 0.00237853616,
+        "rotZ": 0.00237853732,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -3093,7 +3104,7 @@
         "posX": 77.89999,
         "posY": 0.483491957,
         "posZ": 22.8392982,
-        "rotX": -9.044944E-07,
+        "rotX": -9.04494E-07,
         "rotY": 179.962357,
         "rotZ": 0.002377114,
         "scaleX": 1.0,
@@ -3305,9 +3316,9 @@
         "posX": 102.175919,
         "posY": 0.482492924,
         "posZ": 24.0989342,
-        "rotX": 1.41103583E-05,
-        "rotY": 0.000180279545,
-        "rotZ": -0.0023583055,
+        "rotX": 1.47878582E-05,
+        "rotY": 0.000192117252,
+        "rotZ": -0.00235911831,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -3865,7 +3876,7 @@
         "posX": 74.03434,
         "posY": 0.483651757,
         "posZ": 19.2789021,
-        "rotX": -1.18863582E-05,
+        "rotX": -1.18863618E-05,
         "rotY": 179.974319,
         "rotZ": 0.0023692043,
         "scaleX": 1.0,
@@ -4269,7 +4280,7 @@
         "posX": 90.07962,
         "posY": 0.48299098,
         "posZ": 23.0492554,
-        "rotX": -1.98223679E-05,
+        "rotX": -1.98223752E-05,
         "rotY": 179.9659,
         "rotZ": 0.00228894572,
         "scaleX": 1.0,
@@ -4389,7 +4400,7 @@
         "posX": 91.98762,
         "posY": 0.482912421,
         "posZ": 23.0492554,
-        "rotX": -2.33298615E-05,
+        "rotX": -2.33298688E-05,
         "rotY": 179.965881,
         "rotZ": 0.002379859,
         "scaleX": 1.0,
@@ -4721,9 +4732,9 @@
         "posX": 76.3271255,
         "posY": 0.483556151,
         "posZ": 26.7337875,
-        "rotX": -2.3066752E-05,
+        "rotX": -2.30667683E-05,
         "rotY": 179.965759,
-        "rotZ": 0.002329636,
+        "rotZ": 0.00232963683,
         "scaleX": 1.0,
         "scaleY": 1.0,
         "scaleZ": 1.0
@@ -4933,7 +4944,7 @@
         "posX": 82.05114,
         "posY": 0.483320117,
         "posZ": 26.7337856,
-        "rotX": -1.82501719E-06,
+        "rotX": -1.825018E-06,
         "rotY": 179.965942,
         "rotZ": 0.00234982651,
         "scaleX": 1.0,
@@ -5145,7 +5156,7 @@
         "posX": 83.95914,
         "posY": 0.483241618,
         "posZ": 26.7337856,
-        "rotX": -1.41282783E-06,
+        "rotX": -1.41282862E-06,
         "rotY": 179.965958,
         "rotZ": 0.002349117,
         "scaleX": 1.0,
@@ -5557,7 +5568,7 @@
         "posX": 89.683136,
         "posY": 0.48300612,
         "posZ": 26.7337856,
-        "rotX": -2.50031712E-06,
+        "rotX": -2.500318E-06,
         "rotY": 179.965942,
         "rotZ": 0.00234822975,
         "scaleX": 1.0,
@@ -5663,7 +5674,7 @@
         "posX": 91.59113,
         "posY": 0.482927561,
         "posZ": 26.7337856,
-        "rotX": -2.71278736E-06,
+        "rotX": -2.71278827E-06,
         "rotY": 179.965973,
         "rotZ": 0.00234700926,
         "scaleX": 1.0,
@@ -5769,9 +5780,9 @@
         "posX": -8.436719,
         "posY": 1.00739908,
         "posZ": -6.338758,
-        "rotX": -1.44390106E-05,
+        "rotX": -1.44370506E-05,
         "rotY": 179.982178,
-        "rotZ": 0.00233896077,
+        "rotZ": 0.00233897241,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -5827,9 +5838,9 @@
         "posX": -14.5837345,
         "posY": 1.00765133,
         "posZ": -11.0324688,
-        "rotX": -1.51758441E-05,
+        "rotX": -1.517467E-05,
         "rotY": 180.0,
-        "rotZ": 0.00233895774,
+        "rotZ": 0.00233893725,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -5885,9 +5896,9 @@
         "posX": -5.36320066,
         "posY": 1.00727367,
         "posZ": -6.338758,
-        "rotX": -1.51720124E-05,
+        "rotX": -1.51646082E-05,
         "rotY": 180.0,
-        "rotZ": 0.00233895727,
+        "rotZ": 0.002338967,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -5943,9 +5954,9 @@
         "posX": -14.5837345,
         "posY": 1.00764883,
         "posZ": -1.64504731,
-        "rotX": -1.51742388E-05,
+        "rotX": -1.51740187E-05,
         "rotY": 180.0,
-        "rotZ": 0.002338953,
+        "rotZ": 0.00233896472,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -6001,9 +6012,9 @@
         "posX": -11.5102262,
         "posY": 1.0075258,
         "posZ": -11.0324688,
-        "rotX": -1.5155445E-05,
+        "rotX": -1.51608265E-05,
         "rotY": 180.0,
-        "rotZ": 0.00233895169,
+        "rotZ": 0.002338957,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -6059,9 +6070,9 @@
         "posX": -8.436719,
         "posY": 1.00740039,
         "posZ": -11.0324688,
-        "rotX": -1.51628155E-05,
+        "rotX": -1.51670883E-05,
         "rotY": 180.0,
-        "rotZ": 0.00233894866,
+        "rotZ": 0.002338942,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -6117,9 +6128,9 @@
         "posX": -5.36320066,
         "posY": 1.00727487,
         "posZ": -11.0324688,
-        "rotX": -1.51732293E-05,
+        "rotX": -1.51626527E-05,
         "rotY": 180.0,
-        "rotZ": 0.00233897544,
+        "rotZ": 0.002338977,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -6175,9 +6186,9 @@
         "posX": -14.5837336,
         "posY": 1.00765,
         "posZ": -6.338758,
-        "rotX": -1.51737177E-05,
+        "rotX": -1.51873446E-05,
         "rotY": 180.000168,
-        "rotZ": 0.00233895215,
+        "rotZ": 0.00233893958,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -6232,10 +6243,10 @@
       "Transform": {
         "posX": -11.5102262,
         "posY": 1.00752342,
-        "posZ": -1.64504707,
-        "rotX": -1.51770037E-05,
+        "posZ": -1.64504719,
+        "rotX": -1.5178307E-05,
         "rotY": 180.0,
-        "rotZ": 0.00233895588,
+        "rotZ": 0.00233895727,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -6290,10 +6301,10 @@
       "Transform": {
         "posX": -8.436719,
         "posY": 1.00739789,
-        "posZ": -1.64504719,
-        "rotX": -1.50735523E-05,
+        "posZ": -1.64504731,
+        "rotX": -1.50713031E-05,
         "rotY": 179.997543,
-        "rotZ": 0.00233895355,
+        "rotZ": 0.00233895681,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -6349,9 +6360,9 @@
         "posX": -11.5102262,
         "posY": 1.00752461,
         "posZ": -6.338758,
-        "rotX": -1.631474E-05,
+        "rotX": -1.63102159E-05,
         "rotY": 180.028015,
-        "rotZ": 0.00233896542,
+        "rotZ": 0.00233895262,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -6407,9 +6418,9 @@
         "posX": -5.36320066,
         "posY": 1.00727248,
         "posZ": -1.64504731,
-        "rotX": -1.51610275E-05,
+        "rotX": -1.51585309E-05,
         "rotY": 179.999832,
-        "rotZ": 0.00233895332,
+        "rotZ": 0.00233895518,
         "scaleX": 1.5,
         "scaleY": 1.0,
         "scaleZ": 1.5
@@ -6467,7 +6478,7 @@
         "posZ": 8.217941,
         "rotX": -2.67320445E-07,
         "rotY": 359.977051,
-        "rotZ": -5.957923E-07,
+        "rotZ": -5.957925E-07,
         "scaleX": 0.35,
         "scaleY": 0.02,
         "scaleZ": 0.35
@@ -6700,9 +6711,9 @@
         "z": 0.0
       },
       "ColorDiffuse": {
-        "r": 0.172548622,
-        "g": 0.172548622,
-        "b": 0.172548622
+        "r": 0.172548562,
+        "g": 0.172548562,
+        "b": 0.172548562
       },
       "LayoutGroupSortIndex": 0,
       "Value": 0,
@@ -7779,7 +7790,7 @@
         "posX": -6.73108149,
         "posY": 1.07426167,
         "posZ": -34.0000076,
-        "rotX": 5.119381E-08,
+        "rotX": 3.102259E-08,
         "rotY": 180.0,
         "rotZ": 180.0,
         "scaleX": 1.5,

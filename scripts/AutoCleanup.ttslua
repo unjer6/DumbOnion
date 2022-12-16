@@ -1,8 +1,12 @@
 
-function AutoCleanup(player, playArea, playerDecks, playerDiscards)
+function AutoCleanup(player)
     function CleanupCoroutine()
-        CleanupDiscardFromHand(player, playerDiscards)
-        local discardedCardsFromPlay = CleanupDiscardFromPlay(player, playArea, playerDiscards)
+        local playArea = GetFirstObjectWithTag("Play Area")
+        local deck = GetFirstObjectWithAllTags({"Deck", player.color})
+        local discard = GetFirstObjectWithAllTags({"Discard", player.color})
+
+        local discardedCardsFromPlay = CleanupUtils.DiscardFromPlay(playArea, discard)
+        CleanupUtils.DiscardHand(player, discard)
 
         -- wait for cards being discarded to finish moving to discard pile
         CoroutineYieldUntil(
@@ -17,86 +21,74 @@ function AutoCleanup(player, playArea, playerDecks, playerDiscards)
             end, 5)
 
         -- wait for discard pile to settle
-        if (playerDiscards[player.color]) then
-            CoroutineYieldUntil(
-                function()
-                    local cardsFarAboveDiscard = GetCardsAbove(playerDiscards[player.color], 5)
-                    local cardsInDiscard = GetCardsAbove(playerDiscards[player.color], 0.5)
-                    return (#cardsInDiscard == 1 and #cardsFarAboveDiscard == 1 and cardsInDiscard[1].resting) or #cardsFarAboveDiscard == 0
-                end, 5)
-        end
+        CleanupUtils.CoroutineYieldUntilPileSettled(discard)
 
-        -- wait just to make the animation more pleasing
-        for i=1,5 do
-            coroutine.yield(0)
-        end
-
-        local amountDealt = CleanupDrawHand(player, playerDecks, 5)
-
-        -- wait just to make the animation more pleasing
-        for i=1,15 do
-            coroutine.yield(0)
-        end
+        local amountDealt = CleanupUtils.DrawHand(player, deck, 5)
 
         if (amountDealt < 5) then
-            CleanupShuffleDiscard(player, playerDecks, playerDiscards)
-            -- wait for draw pile to settle
-            if (playerDecks[player.color]) then
-                CoroutineYieldUntil(
-                    function()
-                        local cardsFarAboveDeck = GetCardsAbove(playerDecks[player.color], 5)
-                        local cardsInDeck = GetCardsAbove(playerDecks[player.color], 0.5)
-                        return (#cardsInDeck == 1 and #cardsFarAboveDeck == 1 and cardsInDeck[1].resting) or #cardsFarAboveDeck == 0
-                    end, 5)
+            -- wait just to make the animation more pleasing
+            if (amountDealt > 0) then
+                for i=1,20 do
+                    coroutine.yield(0)
+                end
             end
-            CleanupDrawHand(player, playerDecks, 5 - amountDealt)
+
+            CleanupUtils.ShuffleDiscard(deck, discard)
+            -- wait for draw pile to settle
+            CleanupUtils.CoroutineYieldUntilPileSettled(deck)
+            CleanupUtils.DrawHand(player, deck, 5 - amountDealt)
         end
 
         return 1
     end
 
-    if (player and player.seated) then
+    if (player.seated) then
         startLuaCoroutine(self, "CleanupCoroutine")
     end
 end
 
-function CleanupDiscardFromHand(player, playerDiscards)
-    if (playerDiscards[player.color]) then
-        local cardsInHand = player.getHandObjects(1)
-        cardsInHand = table.filterIndexed(cardsInHand, function (obj) return obj.type == "Card" end)
-        for _, card in pairs(cardsInHand) do
-            card.setPosition(playerDiscards[player.color].getPosition() + Vector(0,2,0))
-        end
-    end
-end
+-- ///////////////////////////////////////////////////////////////////////////////// Cleanup steps
+
+CleanupUtils = {}
 
 -- Returns a list of cards discarded from play (for tracking purposes)
-function CleanupDiscardFromPlay(player, playArea, playerDiscards)
+CleanupUtils.DiscardFromPlay = function(playArea, discard)
     local outDiscardedCards = {}
 
-    if (playArea and playerDiscards[player.color]) then
+    if (playArea and discard) then
         local cardsInPlay = GetCardsAbove(playArea)
         cardsInPlay = table.filterIndexed(cardsInPlay, function (card) return not (card.locked or card.held_by_color or not card.interactable) end)
-        for _, obj in pairs(cardsInPlay) do
-            obj.setRotation(Vector(0, 180, 0))
-            obj.setPositionSmooth(playerDiscards[player.color].getPosition() + Vector(0,2,0), false, true)
-            table.insert(outDiscardedCards, obj)
+        for _, card in pairs(cardsInPlay) do
+            card.setRotation(Vector(0, 180, 0))
+            card.setPositionSmooth(discard.getPosition() + Vector(0,2,0), false, true)
+            table.insert(outDiscardedCards, card)
         end
     end
 
     return outDiscardedCards
 end
 
+CleanupUtils.DiscardHand = function(player, discard)
+    local cardsInHand = player.getHandObjects(1)
+    cardsInHand = table.filterIndexed(cardsInHand, function (obj) return obj.type == "Card" end)
+
+    if (discard) then
+        for _, card in pairs(cardsInHand) do
+            card.setPosition(discard.getPosition() + Vector(0,2,0))
+        end
+    end
+end
+
 -- Returns how many cards were successfully dealt
-function CleanupDrawHand(player, playerDecks, amount)
-    if (playerDecks[player.color]) then
-        local deck = GetCardsAbove(playerDecks[player.color])[1]
-        if (deck) then
-            local amountToDeal = math.min(deck.getQuantity(), amount)
-            if (deck.type == "Card") then
+CleanupUtils.DrawHand = function(player, deck, amount)
+    if (deck) then
+        local cardsInDeck = GetCardsAbove(deck)[1]
+        if (cardsInDeck) then
+            local amountToDeal = math.min(cardsInDeck.getQuantity(), amount)
+            if (cardsInDeck.type == "Card") then
                 amountToDeal = 1
             end
-            deck.deal(amountToDeal, player.color)
+            cardsInDeck.deal(amountToDeal, player.color)
             return amountToDeal
         end
     end
@@ -104,13 +96,25 @@ function CleanupDrawHand(player, playerDecks, amount)
     return 0
 end
 
-function CleanupShuffleDiscard(player, playerDecks, playerDiscards)
-    if (playerDecks[player.color] and playerDiscards[player.color]) then
-        local discard = GetCardsAbove(playerDiscards[player.color])[1]
-        if (discard) then
-            discard.setRotation(Vector(0, 180, 180))
-            discard.setPosition(playerDecks[player.color].getPosition() + Vector(0,2,0))
-            discard.shuffle()
+CleanupUtils.ShuffleDiscard = function(deck, discard)
+    if (deck and discard) then
+        local cardsInDiscard = GetCardsAbove(discard)[1]
+        if (cardsInDiscard) then
+            cardsInDiscard.setRotation(Vector(0, 180, 180))
+            cardsInDiscard.setPosition(deck.getPosition() + Vector(0,2,0))
+            cardsInDiscard.shuffle()
         end
     end
+end
+
+CleanupUtils.CoroutineYieldUntilPileSettled = function(pile)
+    CoroutineYieldUntil(
+        function()
+            if (pile) then
+                local cardsFarAbove = GetCardsAbove(pile, 5)
+                local cardsIn = GetCardsAbove(pile, 0.5)
+                return (#cardsIn == 1 and #cardsFarAbove == 1 and cardsIn[1].getVelocity():magnitude() < 0.01) or #cardsFarAbove == 0
+            end
+            return true
+        end, 5)
 end

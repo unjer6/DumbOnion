@@ -14,40 +14,22 @@ turnOrder = {
     "Pink"
 }
 
---///////////////////////////////////////////////////////////////////////////////////////////////// DECLARATIONS
-
-playArea = nil
-playerAreas = {
-    ["Yellow"] = nil,
-    ["Blue"] = nil,
-    ["Red"] = nil,
-    ["White"] = nil,
-    ["Green"] = nil,
-    ["Pink"] = nil
-}
-playerDecks = {
-    ["Yellow"] = nil,
-    ["Blue"] = nil,
-    ["Red"] = nil,
-    ["White"] = nil,
-    ["Green"] = nil,
-    ["Pink"] = nil
-}
-playerDiscards = {
-    ["Yellow"] = nil,
-    ["Blue"] = nil,
-    ["Red"] = nil,
-    ["White"] = nil,
-    ["Green"] = nil,
-    ["Pink"] = nil
-}
-
 --///////////////////////////////////////////////////////////////////////////////////////////////// EVENTS
 
 function onLoad(saveString)
+    -- get object bindings
     SetDeclarations()
 
+    -- set all uninteractable objects to be uninteractable
+    local unintObjs = getObjectsWithTag("Uninteractable")
+    for _, obj in pairs(unintObjs) do
+        obj.interactable = false
+    end
+
     -- spawn UI
+
+    -- add hotkeys
+    AddHotkeys()
 end
 
 function onSave()
@@ -56,10 +38,16 @@ end
 
 function onPlayerTurn(current_player, previous_player)
     -- auto cleanup previous player
-    AutoCleanup(previous_player, playArea, playerDecks, playerDiscards)
+    if (previous_player) then
+        AutoCleanup(previous_player)
+    end
 
     -- set color of play area
-    SetPlayAreaColor(playArea, playerAreas, current_player)
+    if (current_player) then
+        SetPlayAreaColor(current_player.color)
+    else
+        SetPlayAreaDefaultColor()
+    end
 end
 
 function onChat(message, player)
@@ -68,12 +56,17 @@ end
 
 --///////////////////////////////////////////////////////////////////////////////////////////////// METHODS
 
-function SetDeclarations()
-    -- find objects by tag
-    playArea = getObjectsWithTag("Play Area")[1]
-    for _, c in pairs(turnOrder) do
-        playerAreas[c] = getObjectsWithAllTags({"Player Area", c})[1]
-        playerDecks[c] = getObjectsWithAllTags({"Deck", c})[1]
-        playerDiscards[c] = getObjectsWithAllTags({"Discard", c})[1]
-    end
+function AddHotkeys()
+    addHotkey("Toggle All Interactable",
+        function(playerColor, hoveredObject)
+            -- turn playerColor into player instance
+            local player = Player[playerColor]
+            if (player.admin) then
+                local objs = getObjectsWithTag("Uninteractable")
+                for _, obj in pairs(objs) do
+                    obj.interactable = true
+                end
+                broadcastToColor("All uninteractable objects set to interactable. They will be set back to uninteractable the next time the save is loaded.", playerColor, "Blue")
+            end
+        end)
 end
